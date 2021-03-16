@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% extends 'home.html' %}
+
+
+{% block content %}
+    <h2 style="text-align: center">{{ search_str | title}}</h2>
+
+    <div class="card" style="width: 18rem;">
+      <img src="{{ img_url }}" class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title">{{ book_details.title }}</h5>
+        <p class="card-text">.</p>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">author : {{ book_details.author }}</li>
+        <li class="list-group-item">publication date : {{ book_details.publish_date }}</li>
+        <li class="list-group-item">publishers : {{ book_details.publishers }}</li>
+      </ul>
+
+    </div>
+
+{% endblock content %}
