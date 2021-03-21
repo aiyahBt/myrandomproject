@@ -8,10 +8,20 @@ import json
 
 # Create your views here.
 def home(request):
-    greetingText = 'hello mother'
+    user = {
+        'username' : '',
+        'is_authenticated' : False,
+    }
+
+    if request.user.is_authenticated:
+        user['username'] = request.user.username
+        user['is_authenticated'] = True
+    else:
+        user['is_authenticated'] = False
+
 
     stuff_for_frontend = {
-        'greetingText': greetingText,
+        'user': user,
     }
 
     return render(request, 'home.html', stuff_for_frontend)

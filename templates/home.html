@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 {% load static %}
 {% load bootstrap4 %}
 
@@ -22,49 +23,52 @@
     <div class="container">
 
         <nav class="navbar navbar-dark bg-dark" >
-            <span class="navbar-brand ">Logo</span>
-            <span class="navbar-nav ">BOOK EXCHANGE</span>
+            <a class="navbar-brand" href="/">
+            <img src="{% static 'image/logo/logoWithoutText50x47.png' %}"  class="thumbnail img-responsive" alt="">
+                Book19
+            </a>
 
-
+            {% if  user.is_authenticated   %}
+                <span class="text-light">{{ user.username }}</span>
+            {% endif %}
         </nav>
 
     </div>
 
 
+    {% block content %}
+        <div class="container-fluid">
+
+            <!-- #serch bar -->
+            <div class="d-flex justify-content-center align-items-center container ">
+
+                <form class="form-group row"  action = "{% url 'search' %}" method = "post">
+                    {%  csrf_token %}
+
+                    <!-- col-md-auto my-2 -->
+                    <!-- col-md-5-->
+                    <div class="col-md-auto my-2 ">
+                        <input class="form-control-inline" type="search"
+                           placeholder="ISBN"
+                           aria-label="Search"
+                           name = "search" id="search" >
+
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit" >Search</button>
+
+                    </div>
 
 
-    <div class="container-fluid">
+                </form>
+            </div>
+        </div>
 
-        <!-- #serch bar -->
-
-
-            <form class="form-group row"  action = "{% url 'search' %}" method = "post">
-                {%  csrf_token %}
-
-                <div class="col-md-auto my-1 ">
-                    <input class="form-control-inline" type="search"
-                       placeholder="Does any book interest you?"
-                       aria-label="Search"
-                       name = "search" id="search">
-
-                </div>
-
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit" >Search</button>
-
-            </form>
+    {% endblock content %}
 
 
 
-
-
-        {% block content %}
-
-        {% endblock content %}
-
-    </div>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
 
 </body>
 
 </html>
+
+

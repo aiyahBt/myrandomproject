@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
+{% load bootstrap4 %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +12,12 @@
     <link rel="stylesheet" href="{% static "css/login.css" %}">
 </head>
 <body >
-    <h2 align="center">[Logo]</h2>
+
+    <!-- Logo-->
+    <div class="d-flex justify-content-center align-items-center container ">
+        <img src="{% static 'image/logo/logoWithoutText50x47.png' %}"  class="thumbnail img-responsive" alt="">
+    </div>
+
 
     <div class="container-sm" >
 
