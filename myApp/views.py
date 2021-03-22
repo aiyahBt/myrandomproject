@@ -2,26 +2,27 @@ import requests
 from requests.compat import quote_plus
 from django.shortcuts import render
 from bs4 import BeautifulSoup
+from django.contrib.auth import logout
 from . import models
 import json
 
 
 # Create your views here.
 def home(request):
-    user = {
-        'username' : '',
-        'is_authenticated' : False,
-    }
+    # user = {
+    #     'username' : '',
+    #     'is_authenticated' : False,
+    # }
 
-    if request.user.is_authenticated:
-        user['username'] = request.user.username
-        user['is_authenticated'] = True
-    else:
-        user['is_authenticated'] = False
+    # if request.user.is_authenticated:
+    #     user['username'] = request.user.username
+    #     user['is_authenticated'] = True
+    # else:
+    #     user['is_authenticated'] = False
 
 
     stuff_for_frontend = {
-        'user': user,
+        # 'user': user,
     }
 
     return render(request, 'home.html', stuff_for_frontend)
@@ -81,3 +82,4 @@ def search(request):
         'search_str': search_str,
     }
     return render(request, 'myApp/search.html', stuff_for_frontend)
+

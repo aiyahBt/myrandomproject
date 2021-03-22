@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
+
 {% load static %}
 {% load bootstrap4 %}
 
@@ -21,7 +21,7 @@
     <!-- #nav-wrapper -->
 
     <div class="container">
-
+        {% csrf_token %}
         <nav class="navbar navbar-dark bg-dark" >
             <a class="navbar-brand" href="/">
             <img src="{% static 'image/logo/logoWithoutText50x47.png' %}"  class="thumbnail img-responsive" alt="">
@@ -30,7 +30,12 @@
 
             {% if  user.is_authenticated   %}
                 <span class="text-light">{{ user.username }}</span>
+                <a class="text-light" href="/logout/"> Log out  </a>
+            {% else %}
+                <a class="text-light" href="/login"> Log in  </a>
+
             {% endif %}
+
         </nav>
 
     </div>
