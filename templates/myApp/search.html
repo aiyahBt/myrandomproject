@@ -30,32 +30,59 @@
             </div>
     </div>
 
+
     <div class="d-flex justify-content-center align-items-center container ">
 
         <div class="text justify-content-center align-items-center container ">
-            <h2 style="text-align: center">{{ search_str | title}}</h2>
+            <h2 style="text-align: center">{{ search_str }}</h2>
         </div>
 
     </div>
 
-    <!-- CARD -->
-    <div class="d-flex justify-content-center align-items-center container ">
-        <div class="card" style="width: 18rem;">
-            <img src="{{ img_url }}" class="card-img-top" alt="...">
+    <!-- if valid show a CARD. -->
+    {% if valid_search_str %}
+            <!-- CARD -->
+        <div class="d-flex justify-content-center align-items-center container ">
+            <div class="card" style="width: 18rem;">
+                {%  csrf_token %}
 
-             <div class="card-body">
-                <h5 class="card-title">{{ book_details.title }}</h5>
-                 <p class="card-text">.</p>
-             </div>
+                <!-- BUTTON in the CARD-->
+                {% if  user.is_authenticated   %}
 
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item">author : {{ book_details.author }}</li>
-                <li class="list-group-item">publication date : {{ book_details.publish_date }}</li>
-                <li class="list-group-item">publishers : {{ book_details.publishers }}</li>
-              </ul>
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="sr-only"></span>
+                      </button>
 
+                      <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#">I have this book.</a>
+                        <a class="dropdown-item" href="#">I want to read this.</a>
+
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Separated link</a>
+                      </div>
+
+                    </div>
+                {% endif %}
+
+
+                <!-- IMAGE -->
+                <img src="{{ img_url }}" class="card-img-top" alt="...">
+
+                 <div class="card-body">
+                    <h5 class="card-title">{{ book_details.title }}</h5>
+                     <p class="card-text">.</p>
+                 </div>
+
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item">author : {{ book_details.author }}</li>
+                    <li class="list-group-item">publication date : {{ book_details.publish_date }}</li>
+                    <li class="list-group-item">publishers : {{ book_details.publishers }}</li>
+                  </ul>
+
+            </div>
         </div>
-    </div>
+    {% endif %}
 
 
 

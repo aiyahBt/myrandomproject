@@ -5,21 +5,10 @@ from bs4 import BeautifulSoup
 from django.contrib.auth import logout
 from . import models
 import json
-
+import isbnlib
 
 # Create your views here.
 def home(request):
-    # user = {
-    #     'username' : '',
-    #     'is_authenticated' : False,
-    # }
-
-    # if request.user.is_authenticated:
-    #     user['username'] = request.user.username
-    #     user['is_authenticated'] = True
-    # else:
-    #     user['is_authenticated'] = False
-
 
     stuff_for_frontend = {
         # 'user': user,
@@ -36,6 +25,21 @@ INFO_URL = 'https://openlibrary.org/isbn/{}'
 def search_isbn(request):
     # need to check validity of isbn 10  13 digits
     search_str = request.POST.get('search')
+
+    stuff_for_frontend = {
+        'valid_search_str': False,
+        'search_str': 'Invalid search string.',
+    }
+
+    if not(search_str): #If none/null/empty
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    #search_str = isbnlib.clean(search_str)
+    if not(isbnlib.is_isbn10(search_str) or isbnlib.is_isbn13(search_str)):
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    #Everything is valid.
+
     detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
     response = requests.get(detail_url)
     data = response.text
@@ -67,6 +71,7 @@ def search_isbn(request):
     }
 
     stuff_for_frontend = {
+        'valid_search_str' : True,
         'search_str': search_str,
         'book_details': book_details,
         'img_url': img_url,
