@@ -60,6 +60,11 @@ def search_isbn(request):
         response = requests.get(detail_url)
         data = response.text
 
+        if not(data):
+            stuff_for_frontend['valid_search_str'] = False
+            stuff_for_frontend['search_str'] = 'No data.'
+            return render(request, 'myApp/search.html', stuff_for_frontend)
+
         # soup_1 to get detail
         soup = BeautifulSoup(data, features='html.parser')
         start = data.find('{')
@@ -79,6 +84,8 @@ def search_isbn(request):
         title = details.get('title')
         publishers = ','.join(details.get('publishers'))  # transform to "abc,def
         publish_date = details.get('publish_date')
+        if not(publish_date):
+            publishers = ''
 
         img_url = BASE_IMAGE_URL.format(search_str)
 
@@ -89,15 +96,14 @@ def search_isbn(request):
         book.publish_date = publish_date
         book.publishers = publishers
 
+        book.img_url = img_url
+
         if len(search_str) == 10:
             book.isbn_10 = int(search_str)
         else:
             book.isbn_10 = None
 
-        book.img_url = img_url
-
         book.save()
-        print('saved')
 
     #sent stuff to front-end.
     book_details = {
