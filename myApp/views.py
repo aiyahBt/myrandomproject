@@ -23,8 +23,11 @@ INFO_URL = 'https://openlibrary.org/isbn/{}'
 
 
 def search_isbn(request):
-    # need to check validity of isbn 10  13 digits
+
     search_str = request.POST.get('search')
+    search_option = request.POST.get('cat')     #
+    # print( 'search option ' + search_option)
+    # print(type(search_option))
 
     stuff_for_frontend = {
         'valid_search_str': False,
@@ -38,8 +41,8 @@ def search_isbn(request):
     if not(isbnlib.is_isbn10(search_str) or isbnlib.is_isbn13(search_str)):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
-    #Everything is valid.
 
+    # Web scrapping process.
     detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
     response = requests.get(detail_url)
     data = response.text
@@ -63,6 +66,7 @@ def search_isbn(request):
 
     img_url = BASE_IMAGE_URL.format(search_str)
 
+    #Finish We scraping process.
     book_details = {
         'title': title,
         'author': author,

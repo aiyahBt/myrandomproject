@@ -1,82 +1,64 @@
-<!DOCTYPE html>
-
+{% extends 'mainTemplate/main.html'%}
 {% load static %}
 {% load bootstrap4 %}
 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>BookExchange</title>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="stylesheet" href="/static/css/style.css">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+{% block search %}
+    <div class="container-fluid">
+
+        <!-- #serch bar -->
+        <div class="d-flex justify-content-center align-items-center container ">
+
+            <form class="form-group row"  action = "{% url 'search' %}" method = "post">
+                {%  csrf_token %}
+
+                <!-- col-md-auto my-2 -->
+
+                <div class="col-md-auto my-2 ">
+                    <input class="form-control-inline" type="search"
+                       placeholder="ISBN"
+                       aria-label="Search"
+                       name = "search" id="search" >
 
 
-</head>
 
-<body>
+                    <!-- submit Button -->
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit" >Search</button>
 
-    <!-- #nav-wrapper -->
+                    <!-- Radios Buttons -->
+                     <div class="form-group col-lg-12">
+                        <label class="custom-control custom-radio"><span class="custom-control-description">Search options </span></label>
 
-    <div class="container">
-        {% csrf_token %}
-        <nav class="navbar navbar-dark bg-dark" >
-            <a class="navbar-brand" href="/">
-            <img src="{% static 'image/logo/logoWithoutText50x47.png' %}"  class="thumbnail img-responsive" alt="">
-                Book19
-            </a>
+                        <label class="custom-control custom-radio">
+                          <input id="searchOpenLibrary" name="cat" type="radio" class="custom-control-input" value='0'>
+                          <span class="custom-control-indicator"></span>
+                          <span class="custom-control-description">OpenLibrary</span>
+                        </label>
+                        <label class="custom-control custom-radio">
+                          <input id="searchDatabase" name="cat" type="radio" class="custom-control-input" value='1'>
+                          <span class="custom-control-indicator"></span>
+                          <span class="custom-control-description">Database</span>
+                        </label>
+                         <label class="custom-control custom-radio">
+                          <input id="searchMatching" name="cat" type="radio" class="custom-control-input" value='2'>
+                          <span class="custom-control-indicator"></span>
+                          <span class="custom-control-description">Matching</span>
+                         </label>
+                      </div>
 
-            {% if  user.is_authenticated   %}
-                <span class="text-light">{{ user.username }}</span>
-                <a class="text-light" href="/logout/"> Log out  </a>
-            {% else %}
-                <a class="text-light" href="/login"> Log in  </a>
+                </div>
 
-            {% endif %}
 
-        </nav>
-
+            </form>
+        </div>
     </div>
 
-
-    {% block content %}
-        <div class="container-fluid">
-
-            <!-- #serch bar -->
-            <div class="d-flex justify-content-center align-items-center container ">
-
-                <form class="form-group row"  action = "{% url 'search' %}" method = "post">
-                    {%  csrf_token %}
-
-                    <!-- col-md-auto my-2 -->
-                    <!-- col-md-5-->
-                    <div class="col-md-auto my-2 ">
-                        <input class="form-control-inline" type="search"
-                           placeholder="ISBN"
-                           aria-label="Search"
-                           name = "search" id="search" >
-
-                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit" >Search</button>
-
-                    </div>
-
-
-                </form>
-            </div>
-        </div>
-
-    {% endblock content %}
+{% endblock search %}
+{% block content %}
+{% endblock content %}
 
 
 
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-</body>
-
-</html>
 
 
