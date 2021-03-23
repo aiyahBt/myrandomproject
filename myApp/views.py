@@ -7,6 +7,7 @@ from . import models
 import json
 import isbnlib
 
+
 # Create your views here.
 def home(request):
 
@@ -25,9 +26,7 @@ INFO_URL = 'https://openlibrary.org/isbn/{}'
 def search_isbn(request):
 
     search_str = request.POST.get('search')
-    search_option = request.POST.get('cat')     #
-    # print( 'search option ' + search_option)
-    # print(type(search_option))
+    search_option = request.POST.get('cat')
 
     stuff_for_frontend = {
         'valid_search_str': False,
@@ -41,54 +40,88 @@ def search_isbn(request):
     if not(isbnlib.is_isbn10(search_str) or isbnlib.is_isbn13(search_str)):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
+    search_str = isbnlib.to_isbn13(search_str) #transform to isbn 13.
+    search_str = isbnlib.canonical(search_str) #remove hyphen (Dash, -).
 
-    # Web scrapping process.
-    detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
-    response = requests.get(detail_url)
-    data = response.text
+    #check if is in Cached_Book.
+    isbn_13_int = int(search_str)
 
-    # soup_1 to get detail
-    soup = BeautifulSoup(data, features='html.parser')
-    start = data.find('{')
-    end = data.rfind('}')
-    details = json.loads(data[start:end + 1])
+    books = models.Cached_Book.objects.filter(isbn_13 = isbn_13_int)
+    book = models.Cached_Book(isbn_13=isbn_13_int)
 
-    # soup_2 to get author
-    info_url = INFO_URL.format(quote_plus(search_str))
-    response = requests.get(info_url)
-    data = response.text
-    soup = BeautifulSoup(data, features='html.parser')
-    author = soup.find("a", {"itemprop": "author"}).get_text()
+    book.isbn_13 = isbn_13_int
 
-    title = details.get('title')
-    publishers = ','.join(details.get('publishers'))  # transform to "abc,def
-    publish_date = details.get('publish_date')
+    #books.exists()
+    if (books.exists()):
+        book = books.first()
+    else:                    # Web scrapping process.
 
-    img_url = BASE_IMAGE_URL.format(search_str)
+        detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
+        response = requests.get(detail_url)
+        data = response.text
 
-    #Finish We scraping process.
+        # soup_1 to get detail
+        soup = BeautifulSoup(data, features='html.parser')
+        start = data.find('{')
+        end = data.rfind('}')
+        details = json.loads(data[start:end + 1])
+
+        # soup_2 to get author
+        info_url = INFO_URL.format(quote_plus(search_str))
+        response = requests.get(info_url)
+        data = response.text
+        soup = BeautifulSoup(data, features='html.parser')
+        author = soup.find("a", {"itemprop": "author"})
+        if (author) : #if(valid)
+            author = author.get_text()
+        else:
+            author = ''
+        title = details.get('title')
+        publishers = ','.join(details.get('publishers'))  # transform to "abc,def
+        publish_date = details.get('publish_date')
+
+        img_url = BASE_IMAGE_URL.format(search_str)
+
+        #Assign values to book.
+        book.isbn_13 = isbn_13_int
+        book.title = title
+        book.author = author
+        book.publish_date = publish_date
+        book.publishers = publishers
+
+        if len(search_str) == 10:
+            book.isbn_10 = int(search_str)
+        else:
+            book.isbn_10 = None
+
+        book.img_url = img_url
+
+        book.save()
+        print('saved')
+
+    #sent stuff to front-end.
     book_details = {
-        'title': title,
-        'author': author,
-        'publish_date': publish_date,
-        'publishers': publishers,
+        'title': book.title,
+        'author': book.author,
+        'publish_date': book.publish_date,
+        'publishers': book.publishers,
     }
 
     stuff_for_frontend = {
         'valid_search_str' : True,
         'search_str': search_str,
         'book_details': book_details,
-        'img_url': img_url,
+        'img_url': book.img_url,
     }
 
     return render(request, 'myApp/search.html', stuff_for_frontend)
 
 
 def search(request):
-    search_str = request.POST.get('search')
-    # print(search_str)
-    stuff_for_frontend = {
-        'search_str': search_str,
-    }
-    return render(request, 'myApp/search.html', stuff_for_frontend)
 
+    search_mode = 'isbn'
+
+    if search_mode == 'isbn':
+        return search_isbn(request)
+    else:
+        return
