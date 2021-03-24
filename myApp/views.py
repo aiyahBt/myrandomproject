@@ -26,6 +26,7 @@ def search_isbn_matching(request, isbn_13_int):
     stuff_for_frontend = {
         'valid_search_str': True,
         'search_str': isbn_13_int,
+        'is_matched' : False
     }
 
     book_query = models.Book.objects.filter(isbn_13 = isbn_13_int)
@@ -43,6 +44,7 @@ def search_isbn_matching(request, isbn_13_int):
 
         if wish_list_isbn_list.intersection(shelf_isbn_list).exists(): #If intersection is not an empty set.
             stuff_for_frontend['book'] = book_query.first()
+            stuff_for_frontend['is_matched'] = True
         else:
             stuff_for_frontend['valid_search_str'] = False
             stuff_for_frontend['search_str'] = 'No matching book.'

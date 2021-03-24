@@ -30,11 +30,14 @@
                       </button>
 
                       <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'myApp:add_to_shelf'  search_str  %}" >I have this book.</a>
-                        <a class="dropdown-item" href="{% url 'myApp:add_to_wish_list'  search_str  %}">I want to read this.</a>
+                        <a class="dropdown-item" href="{% url 'myApp:add_to_shelf'  book.isbn_13  %}" >I have this book.</a>
+                        <a class="dropdown-item" href="{% url 'myApp:add_to_wish_list'  book.isbn_13  %}">I want to read this.</a>
 
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Separated link</a>
+                        {% if is_matched %}
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'user:request_exchange'  book.isbn_13  %}">Request to exchange</a>
+                        {% endif %}
+
                       </div>
 
                     </div>

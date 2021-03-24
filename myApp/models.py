@@ -74,6 +74,12 @@ class Request(models.Model):  # User_2 have to select a book from user 1. Then, 
     canceled = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
 
+    def __str__(self):
+        user_1_name = User.objects.get(pk=self.user_1.pk).username
+        user_2_name = User.objects.get(pk=self.user_2.pk).username
+        book_2_name = Book.objects.get(pk=self.book_2.pk).title
+
+        return '{}, {}, {}, {}'.format(self.id,  user_1_name, user_2_name, book_2_name)
 
 class Status(models.Model):  # After the request is accepted by user2.
     # User who forms a request.
