@@ -21,10 +21,43 @@ BASE_ISBN_URL = 'https://openlibrary.org/isbn/{}.json'
 BASE_IMAGE_URL = 'https://covers.openlibrary.org/b/isbn/{}-M.jpg'
 INFO_URL = 'https://openlibrary.org/isbn/{}'
 
+def search_isbn_matching(request, isbn_13_int):
+
+    stuff_for_frontend = {
+        'valid_search_str': True,
+        'search_str': isbn_13_int,
+    }
+
+    book_query = models.Book.objects.filter(isbn_13 = isbn_13_int)
+    shelf_query = models.User_Book.objects.filter(userID = request.user.id)
+
+    if (shelf_query.filter(isbn_13=isbn_13_int).exists()):
+        stuff_for_frontend['valid_search_str'] = False
+        stuff_for_frontend['search_str'] = 'You own this book.'
+    elif (book_query.exists()):
+
+        userID_query = book_query.first().owned_by.all().values_list('id', flat=True)
+
+        wish_list_isbn_list = models.Wish_List.objects.filter(userID__in=userID_query).values_list('isbn_13', flat=True).distinct()
+        shelf_isbn_list = models.User_Book.objects.filter(userID = request.user.id).values_list('isbn_13', flat=True)
+
+        if wish_list_isbn_list.intersection(shelf_isbn_list).exists(): #If intersection is not an empty set.
+            stuff_for_frontend['book'] = book_query.first()
+        else:
+            stuff_for_frontend['valid_search_str'] = False
+            stuff_for_frontend['search_str'] = 'No matching book.'
+
+    else:
+        stuff_for_frontend['valid_search_str'] = False
+        stuff_for_frontend['search_str'] = 'No matching book.'
+
+    return render(request, 'myApp/search.html', stuff_for_frontend)
+
 
 def search_isbn(request):
     search_str = request.POST.get('search')
     search_option = request.POST.get('cat')
+
 
     stuff_for_frontend = {
         'valid_search_str': False,
@@ -40,9 +73,11 @@ def search_isbn(request):
 
     search_str = isbnlib.to_isbn13(search_str)  # transform to isbn 13.
     search_str = isbnlib.canonical(search_str)  # remove hyphen (Dash, -).
+    isbn_13_int = int(search_str)
 
     # check if is in Cached_Book.
-    isbn_13_int = int(search_str)
+    if (search_option == '2'): #Mathcing
+        return search_isbn_matching(request, isbn_13_int)
 
     books = models.Cached_Book.objects.filter(isbn_13=isbn_13_int)
     book = models.Cached_Book(isbn_13=isbn_13_int)
@@ -110,27 +145,22 @@ def search_isbn(request):
         book.save()
 
     # sent stuff to front-end.
-    book_details = {
-        'title': book.title,
-        'author': book.author,
-        'publish_date': book.publish_date,
-        'publishers': book.publishers,
-    }
 
+    #print(book_details)
     stuff_for_frontend = {
         'valid_search_str': True,
         'search_str': search_str,
-        'book_details': book_details,
-        'img_url': book.img_url,
+        'book': book,
+
     }
 
     return render(request, 'myApp/search.html', stuff_for_frontend)
 
 
 def search(request):
-    search_mode = 'isbn'
+    search_by = 'isbn'
 
-    if search_mode == 'isbn':
+    if search_by == 'isbn':
         return search_isbn(request)
     else:
         return
@@ -188,7 +218,7 @@ def add_to_wish_list(request, isbn_13=1234):
 
     book_query = models.Book.objects.filter(isbn_13=in_isbn_13)
 
-    if request.user.id in book_query.first().owned_by.all().values_list('id', flat=True):
+    if book_query.exists() and request.user.id in book_query.first().owned_by.all().values_list('id', flat=True):
         stuff_for_frontend['search_str'] = 'You have this book!!!'
     else:
         b = models.Wish_List(userID=request.user, isbn_13=book)

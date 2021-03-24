@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'register.apps.RegisterConfig',  # new line
     'crispy_forms',
     'bootstrap4',
+    'user',
 
 
 ]
