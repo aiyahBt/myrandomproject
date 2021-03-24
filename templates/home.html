@@ -9,7 +9,7 @@
         <!-- #serch bar -->
         <div class="d-flex justify-content-center align-items-center container ">
 
-            <form class="form-group row"  action = "{% url 'search' %}" method = "post">
+            <form class="form-group row"  action = "{% url 'myApp:search' %}" method = "post">
                 {%  csrf_token %}
 
                 <!-- col-md-auto my-2 -->
