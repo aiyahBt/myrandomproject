@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+{% extends 'mainTemplate/main.html' %}
+
+{% load static %}
+{% load bootstrap4 %}
+
+{% if user.is_authenticated %}
+{% block content %}
+    {% csrf_token %}
+
+        <div class="container">
+          <div class="row">
+            <div class="col">
+                {% if is_user_1 %}
+                    <div class="card" style="width: 18rem;">
+
+                        <div class="card-body">
+                            <h5 class="card-title">Your book.</h5>
+                        </div>
+
+                        <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
+                            <p class="card-text">Some quick example text to build on the card title and make up the bulk
+                                of the card's content.</p>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">An item</li>
+                            <li class="list-group-item">A second item</li>
+                            <li class="list-group-item">A third item</li>
+                        </ul>
+                        <div class="card-body">
+                            <a href="#" class="card-link">Card link</a>
+                            <a href="#" class="card-link">Another link</a>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="col">
+
+                        <div class="card" style="width: 18rem;">
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ status.user_2 }}'s book.</h5>
+                            </div>
+
+                            <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
+                                <p class="card-text">Some quick example text to build on the card title and make up the
+                                    bulk of the card's content.</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">An item</li>
+                                <li class="list-group-item">A second item</li>
+                                <li class="list-group-item">A third item</li>
+                            </ul>
+                            <div class="card-body">
+                                <a href="#" class="card-link">Card link</a>
+                                <a href="#" class="card-link">Another link</a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card" style="width: 18rem;">
+
+                        <div class="card-body">
+                            <h5 class="card-title">Your book.</h5>
+                        </div>
+
+                        <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
+                            <p class="card-text">Some quick example text to build on the card title and make up the bulk
+                                of the card's content.</p>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">An item</li>
+                            <li class="list-group-item">A second item</li>
+                            <li class="list-group-item">A third item</li>
+                        </ul>
+                        <div class="card-body">
+                            <a href="#" class="card-link">Card link</a>
+                            <a href="#" class="card-link">Another link</a>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="col">
+
+                        <div class="card" style="width: 18rem;">
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ status.user_1 }}'s book.</h5>
+                            </div>
+
+                            <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
+                                <p class="card-text">Some quick example text to build on the card title and make up the
+                                    bulk of the card's content.</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">An item</li>
+                                <li class="list-group-item">A second item</li>
+                                <li class="list-group-item">A third item</li>
+                            </ul>
+                            <div class="card-body">
+                                <a href="#" class="card-link">Card link</a>
+                                <a href="#" class="card-link">Another link</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+
+          </div>
+        </div>
+
+
+{% endblock content %}
+{% endif %}

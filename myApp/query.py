@@ -25,5 +25,13 @@ def query_id():
         print(object)
         print(str(object.bookID))
 
+# from myApp.query import print_all_user_id
+def print_all_user_id():
+
+    list = []
+    for user in User.objects.all():
+        list.append([user.id, user.username])
+
+    print(list)
 
 
