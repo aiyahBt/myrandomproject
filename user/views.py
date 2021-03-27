@@ -12,15 +12,15 @@ def shelf_view(request):
     query_set = myApp_models.User_Book.objects.filter(userID=user.id)
     isbn_list = query_set.values_list('isbn_13', flat=True)
 
-    book_list = list( myApp_models.Book.objects.filter(isbn_13__in=isbn_list) )
-
+    book_list = list(myApp_models.Book.objects.filter(isbn_13__in=isbn_list))
 
     stuff_for_frontend = {
-        'book_list'   : book_list,
-        'nav_context' :  { 'shelf':'active'},
+        'book_list': book_list,
+        'nav_context': {'shelf': 'active'},
 
     }
     return render(request, 'user/shelf.html', stuff_for_frontend)
+
 
 def wish_list_view(request):
     user = request.user
@@ -28,21 +28,23 @@ def wish_list_view(request):
     query_set = myApp_models.Wish_List.objects.filter(userID=user.id)
     isbn_list = query_set.values_list('isbn_13', flat=True)
 
-    book_list = list( myApp_models.Cached_Book.objects.filter(isbn_13__in=isbn_list) )
+    book_list = list(myApp_models.Cached_Book.objects.filter(isbn_13__in=isbn_list))
 
     stuff_for_frontend = {
-        'book_list' : book_list,
+        'book_list': book_list,
         'nav_context': {'wish_list': 'active'},
 
     }
     return render(request, 'user/shelf.html', stuff_for_frontend)
 
+
 # from user.views import in_request_view
 def in_request_view(request):
-    #user = User.objects.get(username='Tata')
+    # user = User.objects.get(username='Tata')
     user_id = request.user.id
 
-    in_requests_list = myApp_models.Request.objects.filter(user_2 = user_id, denied=False, accepted=False) # Pick ones that are active.
+    in_requests_list = myApp_models.Request.objects.filter(user_2=user_id, denied=False,
+                                                           accepted=False)  # Pick ones that are active.
 
     stuff_for_frontend = {
         'in_requests_list': in_requests_list,
@@ -52,11 +54,11 @@ def in_request_view(request):
 
     return render(request, 'user/in_request.html', stuff_for_frontend)
 
-def out_request_view(request):
 
+def out_request_view(request):
     user_id = request.user.id
 
-    out_request_list = myApp_models.Request.objects.filter(user_1 = user_id, denied=False, accepted=False)
+    out_request_list = myApp_models.Request.objects.filter(user_1=user_id, denied=False, accepted=False)
 
     stuff_for_frontend = {
         'out_request_list': out_request_list,
@@ -67,30 +69,30 @@ def out_request_view(request):
     return render(request, 'user/out_request.html', stuff_for_frontend)
 
 
-def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted ):
+def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
     denied = bool(denied)
     accepted = bool(accepted)
-    print(denied)
-    print(accepted)
-    stuff_for_frontend = {
 
+    stuff_for_frontend = {
     }
 
-    in_request = myApp_models.Request.objects.get(id=request_id)
+    # Assume that only user_2 can deny or accept the request.
+    in_request = myApp_models.Request.objects.get(pk=request_id)
+    if (in_request.denied or in_request.accepted):
+        print('You cannot make changes to this request.')
+
     if in_request.user_2.id != request.user.id:
         print()
-        #You have no permission to access this request.
+        # You have no permission to access this request.
 
-
+    print(in_request)
     stuff_for_frontend = {
         'nav_context': {'in_request': 'active'},
-
     }
 
     if (denied):
         in_request.denied = True
         in_request.save()
-        print()
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
@@ -99,27 +101,27 @@ def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted 
         in_request.accepted = True
         in_request.save()
 
-        book_1 = myApp_models.User_Book.objects.filter(userID = in_request.user_1.pk, isbn_13=book_1_isbn_13).first() #The selected book that request.user wants to read, it is user_1's book.
+        book_1 = myApp_models.User_Book.objects.filter(userID=in_request.user_1.pk,
+                                                       isbn_13=book_1_isbn_13).first()  # The selected book that request.user wants to read, it is user_1's book.
 
-        #Update and save.
-        other_in_requests = myApp_models.Request.objects.filter(user_2=request.user.id, book_2=in_request.book_2.pk).\
-            exclude(accepted = True)
+        # Update and save.
+        other_in_requests = myApp_models.Request.objects.filter(user_2=request.user.id, book_2=in_request.book_2.pk). \
+            exclude(accepted=True)
         other_in_requests.update(denied=True)
 
         for e in other_in_requests:
             e.save()
 
-
-        book_2 = myApp_models.User_Book.objects.filter(userID = request.user.id, isbn_13=in_request.book_2.pk).first()
+        book_2 = in_request.book_2
 
         book_2.available = False
         book_1.available = False
         book_1.save()
         book_2.save()
 
-        status_obj = myApp_models.Status.objects.create(user_1 = in_request.user_1, user_2 = request.user,
-                                           book_1 = book_1, book_2 = book_2,
-                                           user_1_status = 'pp', user_2_status='pp')
+        status_obj = myApp_models.Status.objects.create(user_1=in_request.user_1, user_2=request.user,
+                                                        book_1=book_1, book_2=book_2,
+                                                        user_1_status='pp', user_2_status='pp')
         status_obj.save()
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
@@ -128,11 +130,12 @@ def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted 
         user_wish_list = myApp_models.Wish_List.objects.filter(userID=request.user.id)
         user_isbn_13_list = user_wish_list.values_list('isbn_13', flat=True)
 
-        book_from_requesting_user = myApp_models.User_Book.objects.filter(userID=in_request.user_1, available=True, isbn_13__in=user_isbn_13_list )
+        book_from_requesting_user = myApp_models.User_Book.objects.filter(userID=in_request.user_1, available=True,
+                                                                          isbn_13__in=user_isbn_13_list)
 
         book_list = []
         for e in book_from_requesting_user:
-            book_list.append( e.isbn_13)
+            book_list.append(e.isbn_13)
 
             print(e.isbn_13)
 
@@ -140,39 +143,36 @@ def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted 
         stuff_for_frontend['book_list'] = book_list
 
     return render(request, 'user/request_detail.html', stuff_for_frontend)
-        #render request_detail_view
+    # render request_detail_view
 
 
-def request_exchange(request, isbn_13):
-    in_isbn_13 = isbn_13
+def request_exchange(request, bookID):
+    # Checking Validity by trying to do match checkking.
 
-    #We know that the book exists.
-    #book_query = myApp_models.Book.objects.filter(isbn_13=in_isbn_13)
+    user_book = myApp_models.User_Book.objects.get(pk=bookID)
 
-    #book_2 is the book that this user wants to read.
-    if myApp_models.Request.objects.filter(book_2=in_isbn_13, user_1 = request.user.id).exists():
-
+    # We allow only one out request per title.
+    if myApp_models.Request.objects.filter(book_2=user_book.isbn_13.isbn_13, user_1=request.user.id, accepted=False,
+                                           denied=False).exists():
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'This title is already in your request.',
         }
-
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
+    # shelf_query = myApp_models.User_Book.objects.filter(userID=request.user.id)
+    # shelf_isbn_list = shelf_query.values_list('isbn_13', flat=True)
+    #
+    # user_book_query = myApp_models.User_Book.objects.filter(isbn_13=in_isbn_13)
+    # users_own_this_book = user_book_query.values_list('userID', flat=True)
+    #
+    # #The user who on the book we are searching, such that we have the books that are on their wish-lists. Pick just one.
+    # user_book = myApp_models.Wish_List.objects.filter(userID__in=users_own_this_book).filter( isbn_13__in=shelf_isbn_list).first() #Limit = 1
+    #
+    # user_2_obj = user_book.userID
+    # book = myApp_models.User_Book.objects.filter(isbn_13 = in_isbn_13, userID=user_2_obj.id).first() #In the future, we want to let people own more that on book of each ISBN-13.
 
-    shelf_query = myApp_models.User_Book.objects.filter(userID=request.user.id)
-    shelf_isbn_list = shelf_query.values_list('isbn_13', flat=True)
-
-    user_book_query = myApp_models.User_Book.objects.filter(isbn_13=in_isbn_13)
-    users_own_this_book = user_book_query.values_list('userID', flat=True)
-
-
-    user_book = myApp_models.Wish_List.objects.filter(userID__in=users_own_this_book).filter( isbn_13__in=shelf_isbn_list).first() #Limit = 1
-
-    user_2_obj = user_book.userID
-    book = myApp_models.Book.objects.filter(isbn_13 = in_isbn_13).first()
-
-    req = myApp_models.Request.objects.create(user_1 = request.user, user_2=user_2_obj, book_2=book)
+    req = myApp_models.Request.objects.create(user_1=request.user, user_2=user_book.userID, book_2=user_book)
     req.save()
 
     stuff_for_frontend = {
@@ -182,20 +182,20 @@ def request_exchange(request, isbn_13):
 
     return render(request, 'myApp/search.html', stuff_for_frontend)
 
-def active_exchange_view(request):
 
-    status_as_user_1_query = myApp_models.Status.objects.filter(user_1 = request.user.id, exchange_active = True)
-    status_as_user_2_query = myApp_models.Status.objects.filter(user_2 = request.user.id, exchange_active = True)
+def active_exchange_view(request):
+    status_as_user_1_query = myApp_models.Status.objects.filter(user_1=request.user.id, exchange_active=True)
+    status_as_user_2_query = myApp_models.Status.objects.filter(user_2=request.user.id, exchange_active=True)
 
     # status_class = myApp_models.Status
     status_list = []
 
     for e in status_as_user_1_query:
         temp_obj = {
-            'id' : e.id,
-            'involving_user' : e.user_2,
-            'your_book' : e.book_1.isbn_13,
-            'involving_user_book' : e.book_2.isbn_13,
+            'id': e.id,
+            'involving_user': e.user_2,
+            'your_book': e.book_1.isbn_13,
+            'involving_user_book': e.book_2.isbn_13,
             'your_status': e.get_user_1_status_display(),
             'involving_user_status': e.get_user_2_status_display(),
         }
@@ -203,23 +203,23 @@ def active_exchange_view(request):
 
     for e in status_as_user_2_query:
         temp_obj = {
-            'id' : e.id,
-            'involving_user' : e.user_1,
-            'your_book' : e.book_2.isbn_13,
-            'involving_user_book' : e.book_1.isbn_13,
-            'your_status' : e.get_user_2_status_display(),
-            'involving_user_status' : e.get_user_1_status_display(),
+            'id': e.id,
+            'involving_user': e.user_1,
+            'your_book': e.book_2.isbn_13,
+            'involving_user_book': e.book_1.isbn_13,
+            'your_status': e.get_user_2_status_display(),
+            'involving_user_status': e.get_user_1_status_display(),
         }
         status_list.append(temp_obj)
 
     stuff_for_frontend = {
-        'status_list' : status_list,
+        'status_list': status_list,
         'nav_context': {'active_exchange': 'active'},
     }
     return render(request, 'user/active_exchange.html', stuff_for_frontend)
 
-def exchange_detail_view(request, id):
 
+def exchange_detail_view(request, id):
     status = myApp_models.Status.objects.get(pk=id)
 
     if request.user.id != status.user_1.id or request.user.id != status.user_2.id:
@@ -235,10 +235,9 @@ def exchange_detail_view(request, id):
         status.book_2.save()
         status.book_1.save()
 
-        return  active_exchange_view(request)
+        return active_exchange_view(request)
 
-
-    is_user_1 = ( User.objects.get(pk=request.user.id).id == status.user_1.id )
+    is_user_1 = (User.objects.get(pk=request.user.id).id == status.user_1.id)
 
     def get_current_status(status_obj, is_user_1):
         if is_user_1:
@@ -247,7 +246,7 @@ def exchange_detail_view(request, id):
             return status.user_2_status
 
     class status_form(forms.Form):
-            status = forms.ChoiceField(choices=myApp_models.Status.user_status_choices)
+        status = forms.ChoiceField(choices=myApp_models.Status.user_status_choices)
 
     status_selection_form = status_form(initial={'status': get_current_status(status, is_user_1)})
     # print(get_current_status(status, is_user_1))
@@ -256,12 +255,13 @@ def exchange_detail_view(request, id):
     stuff_for_frontend = {
         'status': status,
         'nav_context': {'status_detail': 'active'},
-        'is_user_1' : is_user_1,
-        'status_selection_form' : status_selection_form,
+        'is_user_1': is_user_1,
+        'status_selection_form': status_selection_form,
 
     }
 
     return render(request, 'user/exchange_detail.html', stuff_for_frontend)
+
 
 def set_exchange_status(request, status_id):
     status_choice = request.POST.get('status')
@@ -282,7 +282,6 @@ def set_exchange_status(request, status_id):
 
 
 def completed_exchange_view(request):
-
     status_as_user_1_query = myApp_models.Status.objects.filter(user_1=request.user.id, exchange_active=False)
     status_as_user_2_query = myApp_models.Status.objects.filter(user_2=request.user.id, exchange_active=False)
 
@@ -290,10 +289,10 @@ def completed_exchange_view(request):
 
     for e in status_as_user_1_query:
         temp_obj = {
-            'id' : e.id,
-            'involving_user' : e.user_2,
-            'your_book' : e.book_1.isbn_13,
-            'involving_user_book' : e.book_2.isbn_13,
+            'id': e.id,
+            'involving_user': e.user_2,
+            'your_book': e.book_1.isbn_13,
+            'involving_user_book': e.book_2.isbn_13,
             'your_status': e.get_user_1_status_display(),
             'involving_user_status': e.get_user_2_status_display(),
         }
@@ -301,27 +300,17 @@ def completed_exchange_view(request):
 
     for e in status_as_user_2_query:
         temp_obj = {
-            'id' : e.id,
-            'involving_user' : e.user_1,
-            'your_book' : e.book_2.isbn_13,
-            'involving_user_book' : e.book_1.isbn_13,
-            'your_status' : e.get_user_2_status_display(),
-            'involving_user_status' : e.get_user_1_status_display(),
+            'id': e.id,
+            'involving_user': e.user_1,
+            'your_book': e.book_2.isbn_13,
+            'involving_user_book': e.book_1.isbn_13,
+            'your_status': e.get_user_2_status_display(),
+            'involving_user_status': e.get_user_1_status_display(),
         }
         status_list.append(temp_obj)
 
     stuff_for_frontend = {
-        'status_list' : status_list,
+        'status_list': status_list,
         'nav_context': {'completed_exchange': 'active'},
     }
     return render(request, 'user/completed_exchange.html', stuff_for_frontend)
-
-
-
-
-
-
-
-
-
-

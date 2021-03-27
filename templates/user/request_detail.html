@@ -30,6 +30,7 @@
           <div class="carousel-inner justify-content-center align-items-center">
 
              <div class="carousel-item active">
+{#                 book_list contains Book object.#}
                  <img class="d-block w-100"  src="{{ book_list.0.img_url }}" alt="First slide">
                  <a href="{% url 'user:request_detail' request_id book_list.0.isbn_13 0 1 %}" id="cancel" name="cancel" class="btn btn-primary justify-content-center align-items-center">Accept</a>
 

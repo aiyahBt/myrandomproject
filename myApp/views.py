@@ -26,25 +26,39 @@ def search_isbn_matching(request, isbn_13_int):
     stuff_for_frontend = {
         'valid_search_str': True,
         'search_str': isbn_13_int,
-        'is_matched' : False
+        'is_matched' : False,
+        'user_book' : ''
     }
 
-    book_query = models.Book.objects.filter(isbn_13 = isbn_13_int)
+    user_book_query = models.User_Book.objects.filter(isbn_13 = isbn_13_int)
     shelf_query = models.User_Book.objects.filter(userID = request.user.id)
 
     if (shelf_query.filter(isbn_13=isbn_13_int).exists()):
         stuff_for_frontend['valid_search_str'] = False
         stuff_for_frontend['search_str'] = 'You own this book.'
-    elif (book_query.exists()):
+    elif (user_book_query.exists()):
 
-        userID_query = book_query.first().owned_by.all().values_list('id', flat=True)
+        #list of userID that own this book.
+        # userID_query = user_book_query.values_list('userID')
+        #
+        # wish_list_isbn_list = models.Wish_List.objects.filter(userID__in=userID_query).values_list('isbn_13', flat=True).distinct()
+        # shelf_isbn_list = models.User_Book.objects.filter(userID = request.user.id).values_list('isbn_13', flat=True)
 
-        wish_list_isbn_list = models.Wish_List.objects.filter(userID__in=userID_query).values_list('isbn_13', flat=True).distinct()
-        shelf_isbn_list = models.User_Book.objects.filter(userID = request.user.id).values_list('isbn_13', flat=True)
+        # In the future we might own multiple books of one isbn.
+        shelf_isbn_list = shelf_query.values_list('isbn_13', flat=True).distinct()
+        users_own_this_book = user_book_query.values_list('userID', flat=True)
 
-        if wish_list_isbn_list.intersection(shelf_isbn_list).exists(): #If intersection is not an empty set.
-            stuff_for_frontend['book'] = book_query.first()
+        user_matched_from_wish_list = models.Wish_List.objects.filter(userID__in=users_own_this_book).filter(isbn_13__in=shelf_isbn_list).first()  # Limit =
+        book_matched = user_book_query.filter(userID=user_matched_from_wish_list.userID.pk)
+
+
+        if book_matched.exists(): #If intersection is not an empty set.
+            stuff_for_frontend['book'] = book_matched.first().isbn_13  #send book object.
             stuff_for_frontend['is_matched'] = True
+            stuff_for_frontend['user_book'] = book_matched.first()      #send the user_book object.
+            print(stuff_for_frontend['book'])
+            print(stuff_for_frontend['user_book'])
+
         else:
             stuff_for_frontend['valid_search_str'] = False
             stuff_for_frontend['search_str'] = 'No matching book.'
@@ -198,16 +212,17 @@ def search(request):
 
 
 def add_to_shelf(request, isbn_13=1234):
-    # print('add to shelf : ' + str(isbn_13))
-    # print(type(isbn_13))
+
     in_isbn_13 = isbn_13
 
     book_query = models.Book.objects.filter(isbn_13=in_isbn_13)
     book = {}
-    if not (book_query.exists()):  # if does not exist, add it to Book.
+    if (book_query.exists()):  # if does not exist, add it to Book.
+        book = book_query.first()
+    else:
         cached_book = models.Cached_Book.objects.filter(isbn_13=in_isbn_13).first()
         book = models.Book.objects.create(isbn_13=in_isbn_13)
-        # book.__dict__.update(cached_book.__dict__) #Copy by hand hahah.
+        # book.__dict__.update(cached_book.__dict__) #Copy by hand .
 
         book.isbn_13 = cached_book.isbn_13
         book.title = cached_book.title
@@ -218,19 +233,16 @@ def add_to_shelf(request, isbn_13=1234):
         book.img_url = cached_book.img_url
         book.save()
 
+    stuff_for_frontend={}
+    #For now, we allow each user to own one copy of a book.
+    if models.User_Book.objects.filter(userID=request.user.id, isbn_13=in_isbn_13).exists():
+        stuff_for_frontend = { 'valid_search_str': False, 'search_str': 'You have this book!!!'}
 
     else:
-        book = book_query.first()
-
-    if request.user.id not in book_query.first().owned_by.all().values_list('id', flat=True):
         b = models.User_Book(userID=request.user, isbn_13=book)
         b.save()
-        print(b.bookID)
+        stuff_for_frontend = { 'valid_search_str': False, 'search_str': 'Added to shelf.'}
 
-    stuff_for_frontend = {
-        'valid_search_str': False,
-        'search_str': 'Added to shelf.',
-    }
     return render(request, 'myApp/search.html', stuff_for_frontend)
 
 

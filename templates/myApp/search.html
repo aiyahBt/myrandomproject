@@ -35,7 +35,7 @@
 
                         {% if is_matched %}
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{% url 'user:request_exchange'  book.isbn_13  %}">Request to exchange</a>
+                            <a class="dropdown-item" href="{% url 'user:request_exchange'  user_book.bookID  %}">Request to exchange</a>
                         {% endif %}
 
                       </div>

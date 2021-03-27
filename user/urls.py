@@ -9,7 +9,7 @@ urlpatterns = [
 
     path('user/wish_list', views.wish_list_view, name='wish_list'),
 
-    path('user/request_exchange/<int:isbn_13>/', views.request_exchange, name='request_exchange'),
+    path('user/request_exchange/<int:bookID>/', views.request_exchange, name='request_exchange'),
 
     path('user/in_request/', views.in_request_view, name='in_request'),
     path('user/out_request/', views.out_request_view, name='out_request'),

@@ -72,9 +72,9 @@ class Request(models.Model):  # User_2 have to select a book from user 1. Then, 
     user_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_1')
     user_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_2')
 
-    book_1 = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, related_name='request_book_1')
+    book_1 = models.ForeignKey(User_Book, on_delete=models.CASCADE, null=True, related_name='request_book_1')
     # User_2's Book which user_1 wants to read.
-    book_2 = models.ForeignKey(Book, on_delete=models.CASCADE, null=False, related_name='request_book_2')
+    book_2 = models.ForeignKey(User_Book, on_delete=models.CASCADE, null=False, related_name='request_book_2')
 
     denied = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
@@ -82,7 +82,7 @@ class Request(models.Model):  # User_2 have to select a book from user 1. Then, 
     def __str__(self):
         user_1_name = self.user_1.username
         user_2_name = self.user_2.username
-        book_2_name = self.book_2.title
+        book_2_name = self.book_2.isbn_13.title
 
         return '{}, {}, {}, {}, denied:{},accepted:{}'.format(self.id, user_1_name, user_2_name, book_2_name,
                                                               self.denied, self.accepted)
