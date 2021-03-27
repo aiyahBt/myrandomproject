@@ -54,7 +54,10 @@ class User_Book(models.Model):  # Owner of the book.
     available = models.BooleanField(default=True)
 
     def __str__(self):
-        return '{}, {}, {}'.format(self.bookID, self.userID, self.isbn_13)
+        str_available = ''
+        if (self.available):
+            str_available = 'available'
+        return '{}, {}, {}, {}'.format(self.bookID, self.userID, self.isbn_13, str_available)
 
 
 class Wish_List(models.Model):

@@ -15,15 +15,25 @@
                     <div class="card" style="width: 18rem;">
 
                         <div class="card-body">
-                            <h5 class="card-title">Your book.</h5>
+                            <h5 class="card-title">My book.</h5>
                         </div>
 
                         <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
                         <div class="card-body">
                             <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
-                            <p class="card-text">Some quick example text to build on the card title and make up the bulk
-                                of the card's content.</p>
+{#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
+{#                                of the card's content.</p>#}
                         </div>
+
+                        {%  load crispy_forms_tags %}
+                        <form method = "POST" class="form-group" action="{% url 'user:set_exchange_status' status.id %}">
+                            {% csrf_token %}
+                            {{ status_selection_form }}
+{#                            <label for="your_name">Statusss </label>#}
+{#                            <input id="your_name" type="text" name="" value="{{ status.id }}">#}
+                            <input type = "submit" value = "submit">
+                        </form>
+
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">An item</li>
                             <li class="list-group-item">A second item</li>
@@ -47,9 +57,10 @@
                             <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
                             <div class="card-body">
                                 <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
-                                <p class="card-text">Some quick example text to build on the card title and make up the
-                                    bulk of the card's content.</p>
+{#                                <p class="card-text">Some quick example text to build on the card title and make up the#}
+{#                                    bulk of the card's content.</p>#}
                             </div>
+
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">An item</li>
                                 <li class="list-group-item">A second item</li>
@@ -65,15 +76,25 @@
                     <div class="card" style="width: 18rem;">
 
                         <div class="card-body">
-                            <h5 class="card-title">Your book.</h5>
+                            <h5 class="card-title">My book.</h5>
                         </div>
 
                         <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
                         <div class="card-body">
                             <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
-                            <p class="card-text">Some quick example text to build on the card title and make up the bulk
-                                of the card's content.</p>
+{#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
+{#                                of the card's content.</p>#}
                         </div>
+
+                        {%  load crispy_forms_tags %}
+                        <form method = "POST" class="form-group" action="{% url 'user:set_exchange_status' status.id %}">
+                            {% csrf_token %}
+                            {{ status_selection_form }}
+{#                            <label for="your_name">Statusss </label>#}
+{#                            <input id="your_name" type="text" name="" value="{{ status.id }}">#}
+                            <input type = "submit" value = "submit">
+                        </form>
+
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">An item</li>
                             <li class="list-group-item">A second item</li>
@@ -97,8 +118,8 @@
                             <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
                             <div class="card-body">
                                 <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
-                                <p class="card-text">Some quick example text to build on the card title and make up the
-                                    bulk of the card's content.</p>
+{#                                <p class="card-text">Some quick example text to build on the card title and make up the#}
+{#                                    bulk of the card's content.</p>#}
                             </div>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">An item</li>
@@ -115,7 +136,7 @@
 
 
           </div>
-        </div>
+
 
 
 {% endblock content %}

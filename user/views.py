@@ -3,6 +3,7 @@ import requests
 from requests.compat import quote_plus
 from myApp import models as myApp_models
 from django.contrib.auth.models import User
+from django import forms
 
 
 def shelf_view(request):
@@ -41,28 +42,30 @@ def in_request_view(request):
     #user = User.objects.get(username='Tata')
     user_id = request.user.id
 
-    in_requests_list = list(myApp_models.Request.objects.filter(user_2 = user_id, denied=False, accepted=False)) # Pick ones that are active.
-
-
-    request_list_to_frontend = []
-    for e in in_requests_list:
-        temp_obj = {
-            'id' : e.id,  #request id
-            'user' : e.user_1,
-            'book' : e.book_2,
-        }
-        request_list_to_frontend.append(temp_obj)
-
+    in_requests_list = myApp_models.Request.objects.filter(user_2 = user_id, denied=False, accepted=False) # Pick ones that are active.
 
     stuff_for_frontend = {
-        'request_list_to_frontend': request_list_to_frontend,
+        'in_requests_list': in_requests_list,
         'nav_context': {'in_request': 'active'},
 
     }
 
-    #return in_requests_list
-
     return render(request, 'user/in_request.html', stuff_for_frontend)
+
+def out_request_view(request):
+
+    user_id = request.user.id
+
+    out_request_list = myApp_models.Request.objects.filter(user_1 = user_id, denied=False, accepted=False)
+
+    stuff_for_frontend = {
+        'out_request_list': out_request_list,
+        'nav_context': {'out_request': 'active'},
+
+    }
+
+    return render(request, 'user/out_request.html', stuff_for_frontend)
+
 
 def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted ):
     denied = bool(denied)
@@ -106,17 +109,13 @@ def request_detail_view(request, request_id , book_1_isbn_13, denied , accepted 
         for e in other_in_requests:
             e.save()
 
-        #Set both book to not Available.
-        # print(in_request.user_1.pk)
-        # print(in_request.book_2.pk)
+
         book_2 = myApp_models.User_Book.objects.filter(userID = request.user.id, isbn_13=in_request.book_2.pk).first()
 
         book_2.available = False
         book_1.available = False
         book_1.save()
         book_2.save()
-
-
 
         status_obj = myApp_models.Status.objects.create(user_1 = in_request.user_1, user_2 = request.user,
                                            book_1 = book_1, book_2 = book_2,
@@ -150,6 +149,16 @@ def request_exchange(request, isbn_13):
     #We know that the book exists.
     #book_query = myApp_models.Book.objects.filter(isbn_13=in_isbn_13)
 
+    #book_2 is the book that this user wants to read.
+    if myApp_models.Request.objects.filter(book_2=in_isbn_13, user_1 = request.user.id).exists():
+
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'This title is already in your request.',
+        }
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
 
     shelf_query = myApp_models.User_Book.objects.filter(userID=request.user.id)
     shelf_isbn_list = shelf_query.values_list('isbn_13', flat=True)
@@ -178,7 +187,7 @@ def active_exchange_view(request):
     status_as_user_1_query = myApp_models.Status.objects.filter(user_1 = request.user.id, exchange_active = True)
     status_as_user_2_query = myApp_models.Status.objects.filter(user_2 = request.user.id, exchange_active = True)
 
-    status_class = myApp_models.Status
+    # status_class = myApp_models.Status
     status_list = []
 
     for e in status_as_user_1_query:
@@ -187,8 +196,8 @@ def active_exchange_view(request):
             'involving_user' : e.user_2,
             'your_book' : e.book_1.isbn_13,
             'involving_user_book' : e.book_2.isbn_13,
-            'your_status': e.get_status_string(1),
-            'involving_user_status': e.get_status_string(2),
+            'your_status': e.get_user_1_status_display(),
+            'involving_user_status': e.get_user_2_status_display(),
         }
         status_list.append(temp_obj)
 
@@ -198,8 +207,8 @@ def active_exchange_view(request):
             'involving_user' : e.user_1,
             'your_book' : e.book_2.isbn_13,
             'involving_user_book' : e.book_1.isbn_13,
-            'your_status' : e.get_status_string(2),
-            'involving_user_status' : e.get_status_string(1),
+            'your_status' : e.get_user_2_status_display(),
+            'involving_user_status' : e.get_user_1_status_display(),
         }
         status_list.append(temp_obj)
 
@@ -211,16 +220,102 @@ def active_exchange_view(request):
 
 def exchange_detail_view(request, id):
 
-    status = myApp_models.Status.objects.get(id=id)
-    is_user_1 = (User.objects.get(pk=request.user.id).id == status.user_1.id)
+    status = myApp_models.Status.objects.get(pk=id)
 
+    if request.user.id != status.user_1.id or request.user.id != status.user_2.id:
+        print('Handle this security issue.')
+
+    if status.user_1_status == myApp_models.Status.complete and status.user_2_status == myApp_models.Status.complete:
+        status.exchange_active = False
+        status.save()
+
+        status.book_1.available = True
+        status.book_2.available = True
+
+        status.book_2.save()
+        status.book_1.save()
+
+        return  active_exchange_view(request)
+
+
+    is_user_1 = ( User.objects.get(pk=request.user.id).id == status.user_1.id )
+
+    def get_current_status(status_obj, is_user_1):
+        if is_user_1:
+            return status.user_1_status
+        else:
+            return status.user_2_status
+
+    class status_form(forms.Form):
+            status = forms.ChoiceField(choices=myApp_models.Status.user_status_choices)
+
+    status_selection_form = status_form(initial={'status': get_current_status(status, is_user_1)})
+    # print(get_current_status(status, is_user_1))
+    # status_selection_form.fields['status'].intitial = [get_current_status(status, is_user_1)]
+    print(status_selection_form)
     stuff_for_frontend = {
         'status': status,
         'nav_context': {'status_detail': 'active'},
         'is_user_1' : is_user_1,
+        'status_selection_form' : status_selection_form,
+
     }
 
     return render(request, 'user/exchange_detail.html', stuff_for_frontend)
+
+def set_exchange_status(request, status_id):
+    status_choice = request.POST.get('status')
+
+    # print(status_choice)
+    # print(print(list(request.POST.items()))
+
+    status = myApp_models.Status.objects.get(pk=status_id)
+
+    if (request.user.id == status.user_1.id):
+        status.user_1_status = status_choice
+    else:
+        status.user_2_status = status_choice
+
+    status.save()
+
+    return exchange_detail_view(request, status_id)
+
+
+def completed_exchange_view(request):
+
+    status_as_user_1_query = myApp_models.Status.objects.filter(user_1=request.user.id, exchange_active=False)
+    status_as_user_2_query = myApp_models.Status.objects.filter(user_2=request.user.id, exchange_active=False)
+
+    status_list = []
+
+    for e in status_as_user_1_query:
+        temp_obj = {
+            'id' : e.id,
+            'involving_user' : e.user_2,
+            'your_book' : e.book_1.isbn_13,
+            'involving_user_book' : e.book_2.isbn_13,
+            'your_status': e.get_user_1_status_display(),
+            'involving_user_status': e.get_user_2_status_display(),
+        }
+        status_list.append(temp_obj)
+
+    for e in status_as_user_2_query:
+        temp_obj = {
+            'id' : e.id,
+            'involving_user' : e.user_1,
+            'your_book' : e.book_2.isbn_13,
+            'involving_user_book' : e.book_1.isbn_13,
+            'your_status' : e.get_user_2_status_display(),
+            'involving_user_status' : e.get_user_1_status_display(),
+        }
+        status_list.append(temp_obj)
+
+    stuff_for_frontend = {
+        'status_list' : status_list,
+        'nav_context': {'completed_exchange': 'active'},
+    }
+    return render(request, 'user/completed_exchange.html', stuff_for_frontend)
+
 
 
 

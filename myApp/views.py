@@ -11,7 +11,7 @@ import isbnlib
 # Create your views here.
 def home(request):
     stuff_for_frontend = {
-        # 'user': user,
+        'nav_context' : {'home' : 'active'}
     }
 
     return render(request, 'home.html', stuff_for_frontend)
@@ -61,102 +61,131 @@ def search_isbn(request):
     search_option = request.POST.get('cat')
 
 
-    stuff_for_frontend = {
-        'valid_search_str': False,
-        'search_str': 'Invalid search string.',
-    }
-
     if not (search_str):  # If none/null/empty
+
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'Invalid search string.',
+        }
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
     # search_str = isbnlib.clean(search_str)
     if not (isbnlib.is_isbn10(search_str) or isbnlib.is_isbn13(search_str)):
+
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'Invalid search string.',
+        }
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
+    #Transform the string to isbn13-integer.
     search_str = isbnlib.to_isbn13(search_str)  # transform to isbn 13.
     search_str = isbnlib.canonical(search_str)  # remove hyphen (Dash, -).
     isbn_13_int = int(search_str)
 
-    # check if is in Cached_Book.
-    if (search_option == '2'): #Mathcing
-        return search_isbn_matching(request, isbn_13_int)
 
-    books = models.Cached_Book.objects.filter(isbn_13=isbn_13_int)
-    book = models.Cached_Book(isbn_13=isbn_13_int)
+    if (search_option == '1'):    #Search within database. (search in Book table.)
+        book_query = models.Book.objects.filter(isbn_13=isbn_13_int)
 
-    book.isbn_13 = isbn_13_int
+        stuff_for_frontend = {
+            'valid_search_str': True,
+            'search_str': search_str,
 
-    # books.exists()
-    if (books.exists()):
-        book = books.first()
-    else:  # Web scrapping process.
-
-        detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
-        response = requests.get(detail_url)
-        data = response.text
-
-        if not (data):
+        }
+        if (book_query.exists()):
+            stuff_for_frontend['book'] = book_query.first()
+        else:
             stuff_for_frontend['valid_search_str'] = False
-            stuff_for_frontend['search_str'] = 'No data.'
+            stuff_for_frontend['search_str'] = 'This book is not available.'
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    elif (search_option == '2'): #Mathcing
+        return search_isbn_matching(request, isbn_13_int)
+    else: #seach_option == '0' (search from open library).
+        book_query = models.Cached_Book.objects.filter(isbn_13=isbn_13_int)
+        book = ''
+
+        # check if is in Cached_Book.
+        if (book_query.exists()):
+            book = book_query.first()
+
+            stuff_for_frontend = {
+                'valid_search_str': True,
+                'search_str': isbn_13_int,
+                'book' : book,
+            }
+
             return render(request, 'myApp/search.html', stuff_for_frontend)
+        else:  # Web scrapping process.
 
-        # soup_1 to get detail
-        soup = BeautifulSoup(data, features='html.parser')
-        start = data.find('{')
-        end = data.rfind('}')
-        details = json.loads(data[start:end + 1])
+            book = models.Cached_Book.objects.create(isbn_13=isbn_13_int)
 
-        # soup_2 to get author
-        info_url = INFO_URL.format(quote_plus(search_str))
-        response = requests.get(info_url)
-        data = response.text
-        soup = BeautifulSoup(data, features='html.parser')
-        author = soup.find("a", {"itemprop": "author"})
-        if (author):  # if(valid)
-            author = author.get_text()
-        else:
-            author = ''
-        title = details.get('title')
+            detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
+            response = requests.get(detail_url)
+            data = response.text
 
-        publishers = details.get('publishers')
-        if (publishers):
-            publishers = ','.join(details.get('publishers'))
-        else:
-            publishers = ''
+            if not (data):
+                stuff_for_frontend = {
+                    'valid_search_str' : False,
+                    'search_str' : 'No data.'
+                }
 
-        publish_date = details.get('publish_date')
-        if not (publish_date):
-            publishers = ''
+                return render(request, 'myApp/search.html', stuff_for_frontend)
 
-        img_url = BASE_IMAGE_URL.format(search_str)
+            # soup_1 to get detail
+            soup = BeautifulSoup(data, features='html.parser')
+            start = data.find('{')
+            end = data.rfind('}')
+            details = json.loads(data[start:end + 1])
 
-        # Assign values to book.
-        book.isbn_13 = isbn_13_int
-        book.title = title
-        book.author = author
-        book.publish_date = publish_date
-        book.publishers = publishers
+            # soup_2 to get author
+            info_url = INFO_URL.format(quote_plus(search_str))
+            response = requests.get(info_url)
+            data = response.text
+            soup = BeautifulSoup(data, features='html.parser')
+            author = soup.find("a", {"itemprop": "author"})
+            if (author):  # if(valid)
+                author = author.get_text()
+            else:
+                author = ''
+            title = details.get('title')
 
-        book.img_url = img_url
+            publishers = details.get('publishers')
+            if (publishers):
+                publishers = ','.join(details.get('publishers'))
+            else:
+                publishers = ''
 
-        if len(search_str) == 10:
-            book.isbn_10 = int(search_str)
-        else:
-            book.isbn_10 = None
+            publish_date = details.get('publish_date')
+            if not (publish_date):
+                publishers = ''
 
-        book.save()
+            img_url = BASE_IMAGE_URL.format(search_str)
 
-    # sent stuff to front-end.
+            # Assign values to book.
+            book.isbn_13 = isbn_13_int
+            book.title = title
+            book.author = author
+            book.publish_date = publish_date
+            book.publishers = publishers
 
-    #print(book_details)
-    stuff_for_frontend = {
-        'valid_search_str': True,
-        'search_str': search_str,
-        'book': book,
+            book.img_url = img_url
 
-    }
+            if len(search_str) == 10:
+                book.isbn_10 = int(search_str)
+            else:
+                book.isbn_10 = None
 
-    return render(request, 'myApp/search.html', stuff_for_frontend)
+            book.save()
+
+            stuff_for_frontend = {
+                'valid_search_str': True,
+                'search_str': search_str,
+                'book': book,
+            }
+
+            return render(request, 'myApp/search.html', stuff_for_frontend)
 
 
 def search(request):

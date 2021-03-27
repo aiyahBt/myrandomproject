@@ -43,13 +43,14 @@
         {%  csrf_token %}
         {% if user.is_authenticated %}
             <nav class="nav nav-pills nav-justified nav-light bg-light">
+              <a class="nav-link {{ nav_context.home}}" href="{% url 'myApp:home' %}">Home</a>
               <a class="nav-link {{ nav_context.shelf}}" href="{% url 'user:shelf' %}">Shelf</a>
               <a class="nav-link {{ nav_context.wish_list}}" href="{% url 'user:wish_list' %}">Wish List</a>
               <a class="nav-link {{ nav_context.in_request}}" href="{% url 'user:in_request' %}">In request</a>
-              <a class="nav-link" href="#">Out request</a>
+              <a class="nav-link {{ nav_context.out_request}}" href="{% url 'user:out_request' %}">Out request</a>
               <a class="nav-link {{  nav_context.active_exchange}}" href="{% url 'user:active_exchange' %}">Active Exchange</a>
-              <a class="nav-link" href="#">Completed Exchange</a>
-              <a class="nav-link disabled" href="#">Disabled</a>
+              <a class="nav-link {{  nav_context.completed_exchange}}" href="{% url 'user:completed_exchange' %}">Completed Exchange</a>
+{#              <a class="nav-link disabled" href="#">Disabled</a>#}
             </nav>
         {% endif %} 
     {% endblock navtabs %}
