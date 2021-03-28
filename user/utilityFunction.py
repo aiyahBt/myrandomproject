@@ -21,3 +21,4 @@ def redirect_to_home_something_went_wrong(request):
     }
 
     return render(request, 'myApp/search.html', stuff_for_frontend)
+

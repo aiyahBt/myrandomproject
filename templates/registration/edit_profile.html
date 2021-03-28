@@ -1,0 +1,23 @@
+<!doctype html>
+
+{% extends 'mainTemplate/main.html'%}
+{% load crispy_forms_tags %}
+{% load bootstrap4 %}
+
+{% block title %}Edit profile{% endblock %}
+
+{% block content %}
+    <div>
+
+
+    </div>
+
+    <div class="container-sm  pt-5" >
+         <form method="POST" class="form-group w-25">
+            {% csrf_token %}
+            {{ form | crispy }}
+	    <button type="submit" class="btn btn-success">Save changes</button>
+        </form>
+    </div>
+
+{% endblock %}
