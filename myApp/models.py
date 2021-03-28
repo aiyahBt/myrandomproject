@@ -125,9 +125,14 @@ class Status(models.Model):  # After the request is accepted by user2.
         book_1_title = self.book_1.isbn_13.title
         book_2_title = self.book_2.isbn_13.title
 
-        return '{}, {}, {}, {}, {}, user_1:{}, user_2:{}'.format(self.id, user_1_name, user_2_name,
+        active_str=''
+        if (self.exchange_active ):
+            active_str = 'active'
+
+        return '{}, {}, {}, {}, {}, user_1:{}, user_2:{}, {}'.format(self.id, user_1_name, user_2_name,
                                                                 book_1_title, book_2_title,
-                                                                self.user_1_status, self.user_2_status)
+                                                                self.user_1_status, self.user_2_status,
+                                                                     active_str)
 
     def get_status_string(self, user_n):
 

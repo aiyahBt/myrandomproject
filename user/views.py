@@ -4,7 +4,7 @@ from requests.compat import quote_plus
 from myApp import models as myApp_models
 from django.contrib.auth.models import User
 from django import forms
-
+from .utilityFunction import validate_matching
 
 def shelf_view(request):
     user = request.user
@@ -68,7 +68,7 @@ def out_request_view(request):
 
     return render(request, 'user/out_request.html', stuff_for_frontend)
 
-
+#This code is so bad, I tried to bundle functionality within one function.
 def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
     denied = bool(denied)
     accepted = bool(accepted)
@@ -149,7 +149,25 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 def request_exchange(request, bookID):
     # Checking Validity by trying to do match checkking.
 
-    user_book = myApp_models.User_Book.objects.get(pk=bookID)
+    #validate matching to prevent user from playing with string.
+
+    user_book_query = myApp_models.User_Book.objects.filter(pk=bookID)
+    if not(user_book_query.exists()):
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'This book does not exist. What are you talking about.',
+        }
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    user_book = user_book_query.first()
+
+    if not(validate_matching(request, bookID)):
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You cannot form this request.',
+        }
+        return render(request, 'myApp/search.html', stuff_for_frontend)
 
     # We allow only one out request per title.
     if myApp_models.Request.objects.filter(book_2=user_book.isbn_13.isbn_13, user_1=request.user.id, accepted=False,
@@ -222,8 +240,21 @@ def active_exchange_view(request):
 def exchange_detail_view(request, id):
     status = myApp_models.Status.objects.get(pk=id)
 
-    if request.user.id != status.user_1.id or request.user.id != status.user_2.id:
-        print('Handle this security issue.')
+    if request.user.id != status.user_1.id and request.user.id != status.user_2.id: #No permisson.
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You have no permission to access this exchange.',
+        }
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    # Do not allow user to set the new user_status value. -> render active exchange without
+    if not(status.exchange_active):
+        stuff_for_frontend = {
+            'status': status,
+            'nav_context': {'active_exchange': 'active'},
+        }
+        return render(request, 'user/active_exchange.html', stuff_for_frontend)
+
 
     if status.user_1_status == myApp_models.Status.complete and status.user_2_status == myApp_models.Status.complete:
         status.exchange_active = False
@@ -237,44 +268,57 @@ def exchange_detail_view(request, id):
 
         return active_exchange_view(request)
 
+
     is_user_1 = (User.objects.get(pk=request.user.id).id == status.user_1.id)
 
-    def get_current_status(status_obj, is_user_1):
-        if is_user_1:
-            return status.user_1_status
-        else:
-            return status.user_2_status
+    swapped_status = status
+    if not(is_user_1): #swap role
+        swapped_status = myApp_models.Status(user_1=status.user_2, user_2=status.user_1,
+                                                                      book_1=status.book_2, book_2=status.book_1,
+                                                                      user_1_status=status.user_2_status, user_2_status=status.user_1_status)
 
     class status_form(forms.Form):
         status = forms.ChoiceField(choices=myApp_models.Status.user_status_choices)
 
-    status_selection_form = status_form(initial={'status': get_current_status(status, is_user_1)})
-    # print(get_current_status(status, is_user_1))
-    # status_selection_form.fields['status'].intitial = [get_current_status(status, is_user_1)]
-    print(status_selection_form)
+    status_selection_form = status_form(initial={'status': swapped_status.user_1_status})
+
+    # print(status_selection_form)
     stuff_for_frontend = {
         'status': status,
         'nav_context': {'status_detail': 'active'},
-        'is_user_1': is_user_1,
         'status_selection_form': status_selection_form,
-
+        'swapped_status' : swapped_status,
     }
 
     return render(request, 'user/exchange_detail.html', stuff_for_frontend)
 
 
 def set_exchange_status(request, status_id):
+
     status_choice = request.POST.get('status')
 
-    # print(status_choice)
-    # print(print(list(request.POST.items()))
 
     status = myApp_models.Status.objects.get(pk=status_id)
 
+    if not(status.exchange_active):#render active exchange without letting user set the new value.
+        stuff_for_frontend = {
+            'status': status,
+            'nav_context': {'active_exchange': 'active'},
+        }
+        return render(request, 'user/active_exchange.html', stuff_for_frontend)
+
+    print(status.user_1.id)
     if (request.user.id == status.user_1.id):
         status.user_1_status = status_choice
-    else:
+    elif (request.user.id == status.user_2.id):
         status.user_2_status = status_choice
+    else: #No permission.
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You have no permission to access this exchange.',
+        }
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
 
     status.save()
 
@@ -284,6 +328,7 @@ def set_exchange_status(request, status_id):
 def completed_exchange_view(request):
     status_as_user_1_query = myApp_models.Status.objects.filter(user_1=request.user.id, exchange_active=False)
     status_as_user_2_query = myApp_models.Status.objects.filter(user_2=request.user.id, exchange_active=False)
+
 
     status_list = []
 

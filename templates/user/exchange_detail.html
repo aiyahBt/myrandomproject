@@ -10,133 +10,68 @@
 
         <div class="container">
           <div class="row">
+
             <div class="col">
-                {% if is_user_1 %}
+
                     <div class="card" style="width: 18rem;">
 
                         <div class="card-body">
                             <h5 class="card-title">My book.</h5>
                         </div>
 
-                        <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
+                        <img src="{{ swapped_status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
                         <div class="card-body">
-                            <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
-{#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
-{#                                of the card's content.</p>#}
+                            <h5 class="card-title">{{ swapped_status.book_1.isbn_13.title }}</h5>
+                            <p class="card-text">Address : .</p>
                         </div>
 
                         {%  load crispy_forms_tags %}
                         <form method = "POST" class="form-group" action="{% url 'user:set_exchange_status' status.id %}">
                             {% csrf_token %}
                             {{ status_selection_form }}
-{#                            <label for="your_name">Statusss </label>#}
-{#                            <input id="your_name" type="text" name="" value="{{ status.id }}">#}
+
                             <input type = "submit" value = "submit">
                         </form>
-
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">An item</li>
-                            <li class="list-group-item">A second item</li>
-                            <li class="list-group-item">A third item</li>
-                        </ul>
-                        <div class="card-body">
-                            <a href="#" class="card-link">Card link</a>
-                            <a href="#" class="card-link">Another link</a>
-                        </div>
-                    </div>
-                    </div>
-
-                    <div class="col">
-
-                        <div class="card" style="width: 18rem;">
-
-                            <div class="card-body">
-                                <h5 class="card-title">{{ status.user_2 }}'s book.</h5>
-                            </div>
-
-                            <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
-{#                                <p class="card-text">Some quick example text to build on the card title and make up the#}
-{#                                    bulk of the card's content.</p>#}
-                            </div>
-
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">An item</li>
-                                <li class="list-group-item">A second item</li>
-                                <li class="list-group-item">A third item</li>
-                            </ul>
-                            <div class="card-body">
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="card" style="width: 18rem;">
-
-                        <div class="card-body">
-                            <h5 class="card-title">My book.</h5>
-                        </div>
-
-                        <img src="{{ status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ status.book_2.isbn_13.title }}</h5>
-{#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
-{#                                of the card's content.</p>#}
-                        </div>
-
-                        {%  load crispy_forms_tags %}
-                        <form method = "POST" class="form-group" action="{% url 'user:set_exchange_status' status.id %}">
-                            {% csrf_token %}
-                            {{ status_selection_form }}
-{#                            <label for="your_name">Statusss </label>#}
-{#                            <input id="your_name" type="text" name="" value="{{ status.id }}">#}
-                            <input type = "submit" value = "submit">
-                        </form>
-
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">An item</li>
-                            <li class="list-group-item">A second item</li>
-                            <li class="list-group-item">A third item</li>
-                        </ul>
-                        <div class="card-body">
-                            <a href="#" class="card-link">Card link</a>
-                            <a href="#" class="card-link">Another link</a>
-                        </div>
-                    </div>
+                          <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Author : {{ swapped_status.book_1.isbn_13.author }}</li>
+                              <li class="list-group-item">ISBN-13 : {{ swapped_status.book_1.isbn_13.isbn_13 }}</li>
+                            <li class="list-group-item">Publication date : {{ swapped_status.book_1.isbn_13.publish_date }}</li>
+                            <li class="list-group-item">Publishers : {{ swapped_status.book_1.isbn_13.publishers }}</li>
+                          </ul>
+{#                        <div class="card-body">#}
+{#                            <a href="#" class="card-link">Card link</a>#}
+{#                            <a href="#" class="card-link">Another link</a>#}
+{#                        </div>#}
                     </div>
 
-                    <div class="col">
+            </div>
 
-                        <div class="card" style="width: 18rem;">
+            <div class="col">
 
-                            <div class="card-body">
-                                <h5 class="card-title">{{ status.user_1 }}'s book.</h5>
-                            </div>
+                <div class="card" style="width: 18rem;">
 
-                            <img src="{{ status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ status.book_1.isbn_13.title }}</h5>
-{#                                <p class="card-text">Some quick example text to build on the card title and make up the#}
-{#                                    bulk of the card's content.</p>#}
-                            </div>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">An item</li>
-                                <li class="list-group-item">A second item</li>
-                                <li class="list-group-item">A third item</li>
-                            </ul>
-                            <div class="card-body">
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ swapped_status.user_2.username }}'s book.</h5>
                     </div>
-                {% endif %}
 
+                    <img src="{{ swapped_status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ swapped_status.book_2.isbn_13.title }}</h5>
+                        <p class="card-text">Address : .</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Status : {{ swapped_status.get_user_2_status_display }}</li>
+                        <li class="list-group-item">Author : {{ swapped_status.book_2.isbn_13.author }}</li>
+                        <li class="list-group-item">ISBN-13 : {{ swapped_status.book_2.isbn_13.isbn_13 }}</li>
+                        <li class="list-group-item">Publication date : {{ swapped_status.book_2.isbn_13.publish_date }}</li>
+                        <li class="list-group-item">Publishers : {{ swapped_status.book_2.isbn_13.publishers }}</li>
+                  </ul>
+                </div>
+            </div>
 
           </div>
 
+        </div>
 
 
 {% endblock content %}
