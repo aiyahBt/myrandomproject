@@ -33,9 +33,16 @@ def search_isbn_matching(request, isbn_13_int):
     user_book_query = models.User_Book.objects.filter(isbn_13 = isbn_13_int)
     shelf_query = models.User_Book.objects.filter(userID = request.user.id)
 
-    if (shelf_query.filter(isbn_13=isbn_13_int).exists()):
+    if not(user_book_query.exists()): #No users own this book.
+        stuff_for_frontend['valid_search_str'] = False
+        stuff_for_frontend['search_str'] = 'No one own this book.'
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    elif (shelf_query.filter(isbn_13=isbn_13_int).exists()):
         stuff_for_frontend['valid_search_str'] = False
         stuff_for_frontend['search_str'] = 'You own this book.'
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
     elif (user_book_query.exists()):
 
         #list of userID that own this book.
@@ -49,6 +56,11 @@ def search_isbn_matching(request, isbn_13_int):
         users_own_this_book = user_book_query.values_list('userID', flat=True)
 
         user_matched_from_wish_list = models.Wish_List.objects.filter(userID__in=users_own_this_book).filter(isbn_13__in=shelf_isbn_list).first()  # Limit =
+        if not(user_matched_from_wish_list):
+            stuff_for_frontend['valid_search_str'] = False
+            stuff_for_frontend['search_str'] = 'No matched books.'
+            return render(request, 'myApp/search.html', stuff_for_frontend)
+
         book_matched = user_book_query.filter(userID=user_matched_from_wish_list.userID.pk)
 
 
