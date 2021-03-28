@@ -40,10 +40,8 @@ def wish_list_view(request):
 
 # from user.views import in_request_view
 def in_request_view(request):
-    # user = User.objects.get(username='Tata')
-    user_id = request.user.id
 
-    in_requests_list = myApp_models.Request.objects.filter(user_2=user_id, denied=False,
+    in_requests_list = myApp_models.Request.objects.filter(user_2=request.user.id, denied=False,
                                                            accepted=False)  # Pick ones that are active.
 
     stuff_for_frontend = {
@@ -78,12 +76,29 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 
     # Assume that only user_2 can deny or accept the request.
     in_request = myApp_models.Request.objects.get(pk=request_id)
-    if (in_request.denied or in_request.accepted):
-        print('You cannot make changes to this request.')
+    if not(in_request):
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'Such request does not exits.',
+        }
+        return render(request, 'myApp/search.html', stuff_for_frontend)
 
+
+    if (in_request.denied or in_request.accepted):
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You cannot make changes the request.',
+        }
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    #Allow only user 2 to make changes to request.
     if in_request.user_2.id != request.user.id:
-        print()
-        # You have no permission to access this request.
+
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You have no permission to access this request.',
+        }
+        return render(request, 'myApp/search.html', stuff_for_frontend)
 
     print(in_request)
     stuff_for_frontend = {
@@ -101,12 +116,19 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         in_request.accepted = True
         in_request.save()
 
+        #Delete wish list.
+
+        user_1_wish_list_query = myApp_models.Wish_List.objects.filter(userID=in_request.user_1.id, isbn_13=in_request.book_2.isbn_13.pk)
+
+        user_1_wish_list_query.first().delete()
+
         book_1 = myApp_models.User_Book.objects.filter(userID=in_request.user_1.pk,
                                                        isbn_13=book_1_isbn_13).first()  # The selected book that request.user wants to read, it is user_1's book.
 
         # Update and save.
         other_in_requests = myApp_models.Request.objects.filter(user_2=request.user.id, book_2=in_request.book_2.pk). \
             exclude(accepted=True)
+
         other_in_requests.update(denied=True)
 
         for e in other_in_requests:

@@ -22,7 +22,10 @@
                 <tr>
                   <th scope="row">{{ r.user_1.username }}</th>
                     <td>{{ r.book_2.isbn_13.title}}</td>
-                    <td><a href="{% url 'user:request_detail' r.id 12345678 0 0 %}">See details </a></td>
+                    <td>{{ r.id }}</td>
+                    <td>{% url 'user:request_detail' r.id 123456 0 0 %}</td>
+
+                    <td><a href="{% url 'user:request_detail' r.id 123456 0 0 %}">See details </a></td>
 
                 </tr>
             {% endfor %}
