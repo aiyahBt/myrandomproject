@@ -117,10 +117,9 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         in_request.save()
 
         #Delete wish list.
-
         user_1_wish_list_query = myApp_models.Wish_List.objects.filter(userID=in_request.user_1.id, isbn_13=in_request.book_2.isbn_13.pk)
-
-        user_1_wish_list_query.first().delete()
+        if (user_1_wish_list_query.exists()):
+            user_1_wish_list_query.delete()
 
         book_1 = myApp_models.User_Book.objects.filter(userID=in_request.user_1.pk,
                                                        isbn_13=book_1_isbn_13).first()  # The selected book that request.user wants to read, it is user_1's book.
