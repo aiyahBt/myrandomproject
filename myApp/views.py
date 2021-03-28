@@ -48,8 +48,16 @@ def search_isbn_matching(request, isbn_13_int):
         shelf_isbn_list = shelf_query.values_list('isbn_13', flat=True).distinct()
         users_own_this_book = user_book_query.values_list('userID', flat=True)
 
-        user_matched_from_wish_list = models.Wish_List.objects.filter(userID__in=users_own_this_book).filter(isbn_13__in=shelf_isbn_list).first()  # Limit =
-        book_matched = user_book_query.filter(userID=user_matched_from_wish_list.userID.pk)
+        user_matched_from_wish_list = models.Wish_List.objects.filter(userID__in=users_own_this_book).\
+            filter(isbn_13__in=shelf_isbn_list)
+
+        if not(user_matched_from_wish_list.exists()):
+            stuff_for_frontend['valid_search_str'] = False
+            stuff_for_frontend['search_str'] = 'No matching book.'
+            return render(request, 'myApp/search.html', stuff_for_frontend)
+
+
+        book_matched = user_book_query.filter(userID=user_matched_from_wish_list.filter().userID.pk)
 
 
         if book_matched.exists(): #If intersection is not an empty set.
