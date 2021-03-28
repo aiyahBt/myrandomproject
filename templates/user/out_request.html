@@ -21,7 +21,7 @@
             {% for r in  out_request_list %}
                 <tr>
                   <th scope="row">{{r.user_2.username}}</th>
-                    <td>{{ r.book_2.title}}</td>
+                    <td>{{ r.book_2.isbn_13.title }}</td>
 {#                    <td><a href="{% url 'user:request_detail' r.id 12345678 0 0 %}">See details </a></td>#}
 {#                    I need to let user cancel request.#}
                     <td>See details</td>
