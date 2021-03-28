@@ -4,7 +4,8 @@ from requests.compat import quote_plus
 from myApp import models as myApp_models
 from django.contrib.auth.models import User
 from django import forms
-from .utilityFunction import validate_matching
+from .utilityFunction import validate_matching, redirect_to_home_something_went_wrong
+from django.db import IntegrityError, transaction
 
 def shelf_view(request):
     user = request.user
@@ -100,50 +101,62 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         }
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
-    print(in_request)
+    # print(in_request)
     stuff_for_frontend = {
         'nav_context': {'in_request': 'active'},
     }
 
     if (denied):
-        in_request.denied = True
-        in_request.save()
+        try:
+            with transaction.atomic():
+                in_request.denied = True
+                in_request.save()
+        except IntegrityError:
+            return redirect_to_home_something_went_wrong(request)
+
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
     elif (accepted):
 
-        in_request.accepted = True
-        in_request.save()
+        try:
+            with transaction.atomic():
+                in_request.accepted = True
+                in_request.save()
 
-        #Delete wish list.
-        user_1_wish_list_query = myApp_models.Wish_List.objects.filter(userID=in_request.user_1.id, isbn_13=in_request.book_2.isbn_13.pk)
-        if (user_1_wish_list_query.exists()):
-            user_1_wish_list_query.delete()
+                # Delete wish list.
+                user_1_wish_list_query = myApp_models.Wish_List.objects.filter(userID=in_request.user_1.id,
+                                                                               isbn_13=in_request.book_2.isbn_13.pk)
+                if (user_1_wish_list_query.exists()):
+                    user_1_wish_list_query.delete()
 
-        book_1 = myApp_models.User_Book.objects.filter(userID=in_request.user_1.pk,
-                                                       isbn_13=book_1_isbn_13).first()  # The selected book that request.user wants to read, it is user_1's book.
+                book_1 = myApp_models.User_Book.objects.filter(userID=in_request.user_1.pk,
+                                                               isbn_13=book_1_isbn_13).first()  # The selected book that request.user wants to read, it is user_1's book.
 
-        # Update and save.
-        other_in_requests = myApp_models.Request.objects.filter(user_2=request.user.id, book_2=in_request.book_2.pk). \
-            exclude(accepted=True)
+                # Update and save.
+                other_in_requests = myApp_models.Request.objects.filter(user_2=request.user.id,
+                                                                        book_2=in_request.book_2.pk). \
+                    exclude(accepted=True)
 
-        other_in_requests.update(denied=True)
+                other_in_requests.update(denied=True)
 
-        for e in other_in_requests:
-            e.save()
+                for e in other_in_requests:
+                    e.save()
 
-        book_2 = in_request.book_2
+                book_2 = in_request.book_2
 
-        book_2.available = False
-        book_1.available = False
-        book_1.save()
-        book_2.save()
+                book_2.available = False
+                book_1.available = False
+                book_1.save()
+                book_2.save()
 
-        status_obj = myApp_models.Status.objects.create(user_1=in_request.user_1, user_2=request.user,
-                                                        book_1=book_1, book_2=book_2,
-                                                        user_1_status='pp', user_2_status='pp')
-        status_obj.save()
+                status_obj = myApp_models.Status.objects.create(user_1=in_request.user_1, user_2=request.user,
+                                                                book_1=book_1, book_2=book_2,
+                                                                user_1_status='pp', user_2_status='pp')
+                status_obj.save()
+        except IntegrityError:
+            return redirect_to_home_something_went_wrong(request)
+
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
@@ -158,7 +171,7 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         for e in book_from_requesting_user:
             book_list.append(e.isbn_13)
 
-            print(e.isbn_13)
+            # print(e.isbn_13)
 
         stuff_for_frontend['request_id'] = request_id
         stuff_for_frontend['book_list'] = book_list
@@ -168,7 +181,7 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 
 
 def request_exchange(request, bookID):
-    # Checking Validity by trying to do match checkking.
+    # Checking Validity by trying to do match checking.
 
     #validate matching to prevent user from playing with string.
 
@@ -210,9 +223,12 @@ def request_exchange(request, bookID):
     #
     # user_2_obj = user_book.userID
     # book = myApp_models.User_Book.objects.filter(isbn_13 = in_isbn_13, userID=user_2_obj.id).first() #In the future, we want to let people own more that on book of each ISBN-13.
-
-    req = myApp_models.Request.objects.create(user_1=request.user, user_2=user_book.userID, book_2=user_book)
-    req.save()
+    try:
+        with transaction.atomic():
+            req = myApp_models.Request.objects.create(user_1=request.user, user_2=user_book.userID, book_2=user_book)
+            req.save()
+    except IntegrityError:
+        return redirect_to_home_something_went_wrong(request)
 
     stuff_for_frontend = {
         'valid_search_str': False,
@@ -328,12 +344,13 @@ def set_exchange_status(request, status_id):
         }
         return render(request, 'user/active_exchange.html', stuff_for_frontend)
 
-    print(status.user_1.id)
+    # print(status.user_1.id)
     if (request.user.id == status.user_1.id):
         status.user_1_status = status_choice
     elif (request.user.id == status.user_2.id):
         status.user_2_status = status_choice
-    else: #No permission.
+    # No permission.
+    else:
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'You have no permission to access this exchange.',
@@ -341,7 +358,11 @@ def set_exchange_status(request, status_id):
 
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
-    status.save()
+    try:
+        with transaction.atomic():
+            status.save()
+    except IntegrityError:
+        return redirect_to_home_something_went_wrong(request)
 
     return exchange_detail_view(request, status_id)
 

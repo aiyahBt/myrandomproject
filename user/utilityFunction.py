@@ -1,4 +1,5 @@
 from myApp import models as myApp_models
+from django.shortcuts import render
 
 def validate_matching(request, bookID):
 
@@ -11,3 +12,12 @@ def validate_matching(request, bookID):
                                                                 isbn_13__in=shelf_isbn_list)
 
     return book_matching_query.exists()
+
+
+def redirect_to_home_something_went_wrong(request):
+    stuff_for_frontend = {
+        'valid_search_str' : False,
+        'search_str' : 'Something went wrong.'
+    }
+
+    return render(request, 'myApp/search.html', stuff_for_frontend)
