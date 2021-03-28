@@ -15,7 +15,7 @@ class Search(models.Model):
 
 
 class Book(models.Model):
-    isbn_13 = models.IntegerField(primary_key=True)
+    isbn_13 = models.BigIntegerField(primary_key=True)
     title = models.CharField(max_length=100, null=True)
     author = models.CharField(max_length=100, null=True)
     publish_date = models.CharField(max_length=100,
@@ -31,7 +31,7 @@ class Book(models.Model):
 
 
 class Cached_Book(models.Model):  # Every time user searches, we will update the information to this DB.
-    isbn_13 = models.IntegerField(primary_key=True)
+    isbn_13 = models.BigIntegerField(primary_key=True)
     title = models.CharField(max_length=100, null=True)
     author = models.CharField(max_length=100, null=True)
     publish_date = models.CharField(max_length=100,
