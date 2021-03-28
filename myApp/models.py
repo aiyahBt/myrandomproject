@@ -68,7 +68,7 @@ class Wish_List(models.Model):
         return '{}, {}, {}'.format(self.id, self.userID, self.isbn_13)
 
 
-class Request(models.Model):  # User_2 have to select a book from user 1. Then, the request is transferred to Status.
+class Request(models.Model):  # User_2 have to select a book from user 1. Then, the request is transfered to Status.
     user_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_1')
     user_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_2')
 
