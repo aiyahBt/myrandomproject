@@ -22,7 +22,7 @@ urlpatterns = [
     path('user/set_exchange_status/<int:status_id>/', views.set_exchange_status, name = 'set_exchange_status'),
 
     path('user/profile/<int:id>/', views.user_profile_view, name = 'user_profile'),
-    path('user/profile/info/',UserEditView.as_view(), name = 'user_info'),          #Handle by register app.
+    path('user/profile/info/', UserEditView.as_view(), name = 'user_info'),          #Handle by register app.
     path('user/profile/address/', address_view, name='address'),
 
     #path('user/user_profile/address/',UserEditView.as_view(), name = 'user_info'),          #Handle by register app.

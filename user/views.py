@@ -95,6 +95,7 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 
     # Assume that only user_2 can deny or accept the request.
     in_request = myApp_models.Request.objects.get(pk=request_id)
+
     if not(in_request):
         stuff_for_frontend = {
             'valid_search_str': False,
@@ -337,14 +338,14 @@ def exchange_detail_view(request, id):
     if not(Address.objects.filter(user=status.user_1).exists()):
         try:
             with transaction.atomic():
-                address = Address.objects.filter(user=status.user_1)
+                address = Address.objects.create(user=status.user_1)
                 address.save()
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
     if not(Address.objects.filter(user=status.user_2).exists()):
         try:
             with transaction.atomic():
-                address = Address.objects.filter(status.user_2)
+                address = Address.objects.create(user=status.user_2)
                 address.save()
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)

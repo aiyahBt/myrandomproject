@@ -22,7 +22,8 @@
                         <img src="{{ swapped_status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
                         <div class="card-body">
                             <h5 class="card-title">{{ swapped_status.book_1.isbn_13.title }}</h5>
-                            <p class="card-text">Address : .</p>
+{#                            <p class="card-text">Address : .</p>#}
+                            <p class="card-text">{{ address.0.get_address_str }}</p>
                         </div>
 
                         {%  load crispy_forms_tags %}
@@ -57,7 +58,7 @@
                     <img src="{{ swapped_status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">{{ swapped_status.book_2.isbn_13.title }}</h5>
-                        <p class="card-text">Address : .</p>
+                        <p class="card-text">{{ address.1.get_address_str }}</p>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">Status : {{ swapped_status.get_user_2_status_display }}</li>
