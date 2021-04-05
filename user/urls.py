@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from register.views import UserEditView, address_view
 app_name = 'user'
 urlpatterns = [
     path('user', views.shelf_view, name = 'shelf'),
@@ -20,6 +20,13 @@ urlpatterns = [
     path('user/completed_exchange/', views.completed_exchange_view, name='completed_exchange'),
     path('user/exchange_detail/<int:id>', views.exchange_detail_view, name='exchange_detail'),
     path('user/set_exchange_status/<int:status_id>/', views.set_exchange_status, name = 'set_exchange_status'),
+
+    path('user/profile/<int:id>/', views.user_profile_view, name = 'user_profile'),
+    path('user/profile/info/',UserEditView.as_view(), name = 'user_info'),          #Handle by register app.
+    path('user/profile/address/', address_view, name='address'),
+
+    #path('user/user_profile/address/',UserEditView.as_view(), name = 'user_info'),          #Handle by register app.
+
 
 
     # path('add_to_shelf/<int:isbn_13>/', views.add_to_shelf, name='add_to_shelf'),

@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django import forms
 from .utilityFunction import validate_matching, redirect_to_home_something_went_wrong
 from django.db import IntegrityError, transaction
+from register.models import Address
 
 def shelf_view(request):
     user = request.user
@@ -294,14 +295,20 @@ def exchange_detail_view(request, id):
 
 
     if status.user_1_status == myApp_models.Status.complete and status.user_2_status == myApp_models.Status.complete:
-        status.exchange_active = False
-        status.save()
 
-        status.book_1.available = True
-        status.book_2.available = True
+        try:
+            with transaction.atomic():
+                status.exchange_active = False
+                status.save()
 
-        status.book_2.save()
-        status.book_1.save()
+                status.book_1.available = True
+                status.book_2.available = True
+
+                status.book_2.save()
+                status.book_1.save()
+
+        except IntegrityError:
+            return redirect_to_home_something_went_wrong(request)
 
         return active_exchange_view(request)
 
@@ -309,10 +316,32 @@ def exchange_detail_view(request, id):
     is_user_1 = (User.objects.get(pk=request.user.id).id == status.user_1.id)
 
     swapped_status = status
+
+    if not(Address.objects.filter(user=status.user_1).exists()):
+        try:
+            with transaction.atomic():
+                address = Address.objects.filter(user=status.user_1)
+                address.save()
+        except IntegrityError:
+            return redirect_to_home_something_went_wrong(request)
+    if not(Address.objects.filter(user=status.user_2).exists()):
+        try:
+            with transaction.atomic():
+                address = Address.objects.filter(status.user_2)
+                address.save()
+        except IntegrityError:
+            return redirect_to_home_something_went_wrong(request)
+
+    #We will always send address_1 as this user's address.
+    address_1 = Address.objects.filter(user=request.user.id).first()
+    address_2 = ''
     if not(is_user_1): #swap role
         swapped_status = myApp_models.Status(user_1=status.user_2, user_2=status.user_1,
                                                                       book_1=status.book_2, book_2=status.book_1,
                                                                       user_1_status=status.user_2_status, user_2_status=status.user_1_status)
+        address_2 = Address.objects.filter(user=status.user_1).first()
+    else:
+        address_2 = Address.objects.filter(user=status.user_2).first()
 
     class status_form(forms.Form):
         status = forms.ChoiceField(choices=myApp_models.Status.user_status_choices)
@@ -320,11 +349,14 @@ def exchange_detail_view(request, id):
     status_selection_form = status_form(initial={'status': swapped_status.user_1_status})
 
     # print(status_selection_form)
+    Address.objects.filter(user=request.user.id)
+
     stuff_for_frontend = {
         'status': status,
         'nav_context': {'status_detail': 'active'},
         'status_selection_form': status_selection_form,
         'swapped_status' : swapped_status,
+        'address' : [address_1, address_2],
     }
 
     return render(request, 'user/exchange_detail.html', stuff_for_frontend)
@@ -401,3 +433,39 @@ def completed_exchange_view(request):
         'nav_context': {'completed_exchange': 'active'},
     }
     return render(request, 'user/completed_exchange.html', stuff_for_frontend)
+
+def user_profile_view(request, id): #We will expand this view to other users in the near future.
+
+    if (request.user.id == id): #view your own profile.
+
+
+        stuff_for_frontend = {
+
+        }
+
+        return render(request, 'user/profile.html', stuff_for_frontend)
+
+    else: # For now this is not permitted.
+
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You have no permission to view this profile.',
+        }
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+
+def user_info_view(request):
+
+    if not(request.user.is_authenticated):
+        stuff_for_frontend = {
+            'valid_search_str': False,
+            'search_str': 'You have no permission to view this profile.',
+        }
+
+        return render(request, 'myApp/search.html', stuff_for_frontend)
+
+    return
+
+
+
