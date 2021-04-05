@@ -8,6 +8,7 @@ from .utilityFunction import validate_matching, redirect_to_home_something_went_
 from django.db import IntegrityError, transaction
 from register.models import Address
 
+
 def shelf_view(request):
     user = request.user
 
@@ -42,22 +43,20 @@ def wish_list_view(request):
 
 # from user.views import in_request_view
 def in_request_view(request):
-
     in_requests_list = myApp_models.Request.objects.filter(user_2=request.user.id,
                                                            denied=False,
                                                            accepted=False)  # Pick ones that are active.
 
-    this_user_wish_list_query = myApp_models.Wish_List.objects.filter(userID=request.user.id).\
+    this_user_wish_list_query = myApp_models.Wish_List.objects.filter(userID=request.user.id). \
         values_list('isbn_13', flat=True)
 
     for req in in_requests_list:
         user_1_shelf_query = myApp_models.User_Book.objects.filter(userID=req.user_1.pk,
                                                                    isbn_13__in=this_user_wish_list_query,
                                                                    available=True)
-        if not(user_1_shelf_query.exists()):
+        if not (user_1_shelf_query.exists()):
             req.denied = True
             req.save()
-
 
     in_requests_list = myApp_models.Request.objects.filter(user_2=request.user.id,
                                                            denied=False,
@@ -85,7 +84,8 @@ def out_request_view(request):
 
     return render(request, 'user/out_request.html', stuff_for_frontend)
 
-#This code is so bad, I tried to bundle functionality within one function.
+
+# This code is so bad, I tried to bundle functionality within one function.
 def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
     denied = bool(denied)
     accepted = bool(accepted)
@@ -96,13 +96,12 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
     # Assume that only user_2 can deny or accept the request.
     in_request = myApp_models.Request.objects.get(pk=request_id)
 
-    if not(in_request):
+    if not (in_request):
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'Such request does not exits.',
         }
         return render(request, 'myApp/search.html', stuff_for_frontend)
-
 
     if (in_request.denied or in_request.accepted):
         stuff_for_frontend = {
@@ -111,9 +110,8 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         }
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
-    #Allow only user 2 to make changes to request.
+    # Allow only user 2 to make changes to request.
     if in_request.user_2.id != request.user.id:
-
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'You have no permission to access this request.',
@@ -132,7 +130,6 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
                 in_request.save()
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
-
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
@@ -176,10 +173,9 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
 
-
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
-    else: # accepted = False and denied = False [Just want to view the request.]
+    else:  # accepted = False and denied = False [Just want to view the request.]
         user_wish_list = myApp_models.Wish_List.objects.filter(userID=request.user.id)
         user_isbn_13_list = user_wish_list.values_list('isbn_13', flat=True)
 
@@ -202,10 +198,10 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 def request_exchange(request, bookID):
     # Checking Validity by trying to do match checking.
 
-    #validate matching to prevent user from playing with string.
+    # validate matching to prevent user from playing with string.
 
     user_book_query = myApp_models.User_Book.objects.filter(pk=bookID)
-    if not(user_book_query.exists()):
+    if not (user_book_query.exists()):
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'This book does not exist. What are you talking about.',
@@ -214,8 +210,8 @@ def request_exchange(request, bookID):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
     user_book = user_book_query.first()
-
-    if not(validate_matching(request, bookID)):
+    print(user_book)
+    if not (validate_matching(request, bookID)):
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'You cannot form this request.',
@@ -223,8 +219,13 @@ def request_exchange(request, bookID):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
     # We allow only one out request per title.
-    if myApp_models.Request.objects.filter(book_2=user_book.isbn_13.isbn_13, user_1=request.user.id, accepted=False,
-                                           denied=False).exists():
+
+    this_user_request_query = myApp_models.Request.objects.filter(user_1=request.user.id, accepted=False, denied=False)
+    this_user_request_isbn_list = set([ e.book_2.isbn_13.isbn_13 for e in this_user_request_query])
+    # print(this_user_request_query)
+    # print(user_book.isbn_13.isbn_13 in this_user_request_isbn_list)
+    if myApp_models.Request.objects.filter(book_2=bookID, user_1=request.user.id,
+                                           accepted=False, denied=False).exists()  or user_book.isbn_13.isbn_13 in this_user_request_isbn_list :
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'This title is already in your request.',
@@ -296,7 +297,7 @@ def active_exchange_view(request):
 def exchange_detail_view(request, id):
     status = myApp_models.Status.objects.get(pk=id)
 
-    if request.user.id != status.user_1.id and request.user.id != status.user_2.id: #No permisson.
+    if request.user.id != status.user_1.id and request.user.id != status.user_2.id:  # No permisson.
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'You have no permission to access this exchange.',
@@ -304,13 +305,12 @@ def exchange_detail_view(request, id):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
     # Do not allow user to set the new user_status value. -> render active exchange without
-    if not(status.exchange_active):
+    if not (status.exchange_active):
         stuff_for_frontend = {
             'status': status,
             'nav_context': {'active_exchange': 'active'},
         }
         return render(request, 'user/active_exchange.html', stuff_for_frontend)
-
 
     if status.user_1_status == myApp_models.Status.complete and status.user_2_status == myApp_models.Status.complete:
 
@@ -330,19 +330,18 @@ def exchange_detail_view(request, id):
 
         return active_exchange_view(request)
 
-
     is_user_1 = (User.objects.get(pk=request.user.id).id == status.user_1.id)
 
     swapped_status = status
 
-    if not(Address.objects.filter(user=status.user_1).exists()):
+    if not (Address.objects.filter(user=status.user_1).exists()):
         try:
             with transaction.atomic():
                 address = Address.objects.create(user=status.user_1)
                 address.save()
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
-    if not(Address.objects.filter(user=status.user_2).exists()):
+    if not (Address.objects.filter(user=status.user_2).exists()):
         try:
             with transaction.atomic():
                 address = Address.objects.create(user=status.user_2)
@@ -350,13 +349,13 @@ def exchange_detail_view(request, id):
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
 
-    #We will always send address_1 as this user's address.
+    # We will always send address_1 as this user's address.
     address_1 = Address.objects.filter(user=request.user.id).first()
     address_2 = ''
-    if not(is_user_1): #swap role
+    if not (is_user_1):  # swap role
         swapped_status = myApp_models.Status(user_1=status.user_2, user_2=status.user_1,
-                                                                      book_1=status.book_2, book_2=status.book_1,
-                                                                      user_1_status=status.user_2_status, user_2_status=status.user_1_status)
+                                             book_1=status.book_2, book_2=status.book_1,
+                                             user_1_status=status.user_2_status, user_2_status=status.user_1_status)
         address_2 = Address.objects.filter(user=status.user_1).first()
     else:
         address_2 = Address.objects.filter(user=status.user_2).first()
@@ -373,21 +372,19 @@ def exchange_detail_view(request, id):
         'status': status,
         'nav_context': {'status_detail': 'active'},
         'status_selection_form': status_selection_form,
-        'swapped_status' : swapped_status,
-        'address' : [address_1, address_2],
+        'swapped_status': swapped_status,
+        'address': [address_1, address_2],
     }
 
     return render(request, 'user/exchange_detail.html', stuff_for_frontend)
 
 
 def set_exchange_status(request, status_id):
-
     status_choice = request.POST.get('status')
-
 
     status = myApp_models.Status.objects.get(pk=status_id)
 
-    if not(status.exchange_active):#render active exchange without letting user set the new value.
+    if not (status.exchange_active):  # render active exchange without letting user set the new value.
         stuff_for_frontend = {
             'status': status,
             'nav_context': {'active_exchange': 'active'},
@@ -421,7 +418,6 @@ def completed_exchange_view(request):
     status_as_user_1_query = myApp_models.Status.objects.filter(user_1=request.user.id, exchange_active=False)
     status_as_user_2_query = myApp_models.Status.objects.filter(user_2=request.user.id, exchange_active=False)
 
-
     status_list = []
 
     for e in status_as_user_1_query:
@@ -452,10 +448,10 @@ def completed_exchange_view(request):
     }
     return render(request, 'user/completed_exchange.html', stuff_for_frontend)
 
-def user_profile_view(request, id): #We will expand this view to other users in the near future.
 
-    if (request.user.id == id): #view your own profile.
+def user_profile_view(request, id):  # We will expand this view to other users in the near future.
 
+    if (request.user.id == id):  # view your own profile.
 
         stuff_for_frontend = {
 
@@ -463,7 +459,7 @@ def user_profile_view(request, id): #We will expand this view to other users in 
 
         return render(request, 'user/profile.html', stuff_for_frontend)
 
-    else: # For now this is not permitted.
+    else:  # For now this is not permitted.
 
         stuff_for_frontend = {
             'valid_search_str': False,
@@ -474,8 +470,7 @@ def user_profile_view(request, id): #We will expand this view to other users in 
 
 
 def user_info_view(request):
-
-    if not(request.user.is_authenticated):
+    if not (request.user.is_authenticated):
         stuff_for_frontend = {
             'valid_search_str': False,
             'search_str': 'You have no permission to view this profile.',
@@ -484,6 +479,3 @@ def user_info_view(request):
         return render(request, 'myApp/search.html', stuff_for_frontend)
 
     return
-
-
-
