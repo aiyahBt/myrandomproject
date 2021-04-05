@@ -160,7 +160,7 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
 
         return render(request, 'user/in_request.html', stuff_for_frontend)
 
-    else:
+    else: # accepted = False and denied = False [Just want to view the request.]
         user_wish_list = myApp_models.Wish_List.objects.filter(userID=request.user.id)
         user_isbn_13_list = user_wish_list.values_list('isbn_13', flat=True)
 

@@ -11,6 +11,11 @@ class RegisterForm(UserCreationForm):
         model = User
         fields = ["username", "email", "password1", "password2"]
 
+
+# class AddressForm(forms.Form):
+#     number = forms.IntegerField()
+
+
 # class EditForm(generic.CreateView):
 #     email = forms.EmailField()
 #

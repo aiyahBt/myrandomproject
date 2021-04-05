@@ -21,7 +21,7 @@ class Book(models.Model):
     publish_date = models.CharField(max_length=100,
                                     null=True)  # It says date but actually return just year from a json file.
     publishers = models.CharField(max_length=100, null=True)  # Not good, but need to get it done quickly.
-    isbn_10 = models.CharField(max_length=20, null=True)
+    isbn_10 = models.BigIntegerField(null=True)
     img_url = models.CharField(max_length=200, null=True)
 
     owned_by = models.ManyToManyField(User, through='User_Book')
@@ -31,13 +31,13 @@ class Book(models.Model):
 
 
 class Cached_Book(models.Model):  # Every time user searches, we will update the information to this DB.
-    isbn_13 = models.BigIntegerField(primary_key=True)
+    isbn_13 = models.BigIntegerField(primary_key=True)   #BigIntegerField == 64 bit int
     title = models.CharField(max_length=100, null=True)
     author = models.CharField(max_length=100, null=True)
     publish_date = models.CharField(max_length=100,
                                     null=True)  # It says date but actually return just year from a json file.
     publishers = models.CharField(max_length=100, null=True)  # Not good, but need to get it done quickly.
-    isbn_10 = models.CharField(max_length=20, null=True)
+    isbn_10 = models.BigIntegerField(null=True)
     img_url = models.CharField(max_length=200, null=True)
 
     on_wishlist = models.ManyToManyField(User, through='Wish_List')
@@ -47,7 +47,8 @@ class Cached_Book(models.Model):  # Every time user searches, we will update the
 
 
 class User_Book(models.Model):  # Owner of the book.
-    bookID = models.AutoField(primary_key=True)  # Ownership
+
+    bookID = models.BigAutoField(primary_key=True)   # Ownership  #BigAutoField == 64 bit int
     userID = models.ForeignKey(User, on_delete=models.CASCADE)  # user.id
     isbn_13 = models.ForeignKey(Book, on_delete=models.CASCADE)
 
@@ -61,6 +62,7 @@ class User_Book(models.Model):  # Owner of the book.
 
 
 class Wish_List(models.Model):
+    id  = models.BigAutoField(primary_key=True)
     userID = models.ForeignKey(User, on_delete=models.CASCADE)  # user.id
     isbn_13 = models.ForeignKey(Cached_Book, on_delete=models.CASCADE)
 
@@ -69,6 +71,7 @@ class Wish_List(models.Model):
 
 
 class Request(models.Model):  # User_2 have to select a book from user 1. Then, the request is transfered to Status.
+    id  = models.BigAutoField(primary_key=True)
     user_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_1')
     user_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_2')
 
@@ -89,6 +92,8 @@ class Request(models.Model):  # User_2 have to select a book from user 1. Then, 
 
 
 class Status(models.Model):  # After the request is accepted by user2.
+    id  = models.BigAutoField(primary_key=True)
+
     # User who forms a request.
     user_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='status_user_1')
     # user who is to accept.
