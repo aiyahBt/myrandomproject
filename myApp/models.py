@@ -21,7 +21,7 @@ class Book(models.Model):
     publish_date = models.CharField(max_length=100,
                                     null=True)  # It says date but actually return just year from a json file.
     publishers = models.CharField(max_length=100, null=True)  # Not good, but need to get it done quickly.
-    isbn_10 = models.BigIntegerField(null=True)
+    isbn_10 = models.CharField(max_length=10, null=True)
     img_url = models.CharField(max_length=200, null=True)
 
     owned_by = models.ManyToManyField(User, through='User_Book')
@@ -37,7 +37,7 @@ class Cached_Book(models.Model):  # Every time user searches, we will update the
     publish_date = models.CharField(max_length=100,
                                     null=True)  # It says date but actually return just year from a json file.
     publishers = models.CharField(max_length=100, null=True)  # Not good, but need to get it done quickly.
-    isbn_10 = models.BigIntegerField(null=True)
+    isbn_10 = models.CharField(max_length=10, null=True)
     img_url = models.CharField(max_length=200, null=True)
 
     on_wishlist = models.ManyToManyField(User, through='Wish_List')
