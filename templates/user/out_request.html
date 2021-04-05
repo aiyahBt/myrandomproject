@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{% extends 'mainTemplate/main.html' %}
+
+{% load static %}
+{% load bootstrap4 %}
+
+{% block content %}
+    {% csrf_token %}
+
+    {% if user.is_authenticated %}
+        <table class="table table-dark">
+          <thead>
+            <tr>
+              <th scope="col">Involving user</th>
+              <th scope="col">I want to read</th>
+              <th scope="col">Details</th>
+
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in  out_request_list %}
+                <tr>
+                  <th scope="row">{{r.user_2.username}}</th>
+                    <td>{{ r.book_2.isbn_13.title }}</td>
+{#                    <td><a href="{% url 'user:request_detail' r.id 12345678 0 0 %}">See details </a></td>#}
+{#                    I need to let user cancel request.#}
+                    <td>See details</td>
+
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    {% endif %}
+
+{% endblock content %}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+{% extends 'mainTemplate/main.html' %}
+
+{% load static %}
+{% load bootstrap4 %}
+
+{% if user.is_authenticated %}
+{% block content %}
+    {% csrf_token %}
+
+        <div class="container">
+          <div class="row">
+
+            <div class="col">
+
+                    <div class="card" style="width: 18rem;">
+
+                        <div class="card-body">
+                            <h5 class="card-title">My book.</h5>
+                        </div>
+
+                        <img src="{{ swapped_status.book_1.isbn_13.img_url }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ swapped_status.book_1.isbn_13.title }}</h5>
+                            <p class="card-text">Address : .</p>
+                        </div>
+
+                        {%  load crispy_forms_tags %}
+                        <form method = "POST" class="form-group" action="{% url 'user:set_exchange_status' status.id %}">
+                            {% csrf_token %}
+                            {{ status_selection_form }}
+
+                            <input type = "submit" value = "submit">
+                        </form>
+                          <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Author : {{ swapped_status.book_1.isbn_13.author }}</li>
+                              <li class="list-group-item">ISBN-13 : {{ swapped_status.book_1.isbn_13.isbn_13 }}</li>
+                            <li class="list-group-item">Publication date : {{ swapped_status.book_1.isbn_13.publish_date }}</li>
+                            <li class="list-group-item">Publishers : {{ swapped_status.book_1.isbn_13.publishers }}</li>
+                          </ul>
+{#                        <div class="card-body">#}
+{#                            <a href="#" class="card-link">Card link</a>#}
+{#                            <a href="#" class="card-link">Another link</a>#}
+{#                        </div>#}
+                    </div>
+
+            </div>
+
+            <div class="col">
+
+                <div class="card" style="width: 18rem;">
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ swapped_status.user_2.username }}'s book.</h5>
+                    </div>
+
+                    <img src="{{ swapped_status.book_2.isbn_13.img_url }}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ swapped_status.book_2.isbn_13.title }}</h5>
+                        <p class="card-text">Address : .</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Status : {{ swapped_status.get_user_2_status_display }}</li>
+                        <li class="list-group-item">Author : {{ swapped_status.book_2.isbn_13.author }}</li>
+                        <li class="list-group-item">ISBN-13 : {{ swapped_status.book_2.isbn_13.isbn_13 }}</li>
+                        <li class="list-group-item">Publication date : {{ swapped_status.book_2.isbn_13.publish_date }}</li>
+                        <li class="list-group-item">Publishers : {{ swapped_status.book_2.isbn_13.publishers }}</li>
+                  </ul>
+                </div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+{% endblock content %}
+{% endif %}
