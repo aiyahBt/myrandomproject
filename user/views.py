@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import requests
 from requests.compat import quote_plus
 from myApp import models as myApp_models
@@ -12,7 +12,7 @@ from register.models import Address
 def shelf_view(request):
     user = request.user
 
-    query_set = myApp_models.User_Book.objects.filter(userID=user.id)
+    query_set = myApp_models.User_Book.objects.filter(userID=user.id, available=True)
     isbn_list = query_set.values_list('isbn_13', flat=True)
 
     book_list = list(myApp_models.Book.objects.filter(isbn_13__in=isbn_list))
@@ -173,7 +173,9 @@ def request_detail_view(request, request_id, book_1_isbn_13, denied, accepted):
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
 
-        return render(request, 'user/in_request.html', stuff_for_frontend)
+        # return render(request, 'user/in_request.html', stuff_for_frontend)
+        #return redirect('user/in_request/')
+        return in_request_view(request)
 
     else:  # accepted = False and denied = False [Just want to view the request.]
         user_wish_list = myApp_models.Wish_List.objects.filter(userID=request.user.id)

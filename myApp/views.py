@@ -148,8 +148,17 @@ def search_isbn(request):
             detail_url = BASE_ISBN_URL.format(quote_plus(search_str))
             response = requests.get(detail_url)
             data = response.text
+            #print(data)
 
-            if not (data):
+            if (data.find('<!DOCTYPE html>') != -1): #We got doctype instead of JSON.
+                stuff_for_frontend = {
+                    'valid_search_str': False,
+                    'search_str': 'No data.'
+                }
+                return render(request, 'myApp/search.html', stuff_for_frontend)
+
+
+            if not (data) or (len(data) < 10):
                 stuff_for_frontend = {
                     'valid_search_str': False,
                     'search_str': 'No data.'
@@ -262,6 +271,11 @@ def add_to_shelf(request, isbn_13=1234):
             with transaction.atomic():
                 b = models.User_Book.objects.create(userID=request.user, isbn_13=book)
                 b.save()
+
+                wish_list_query = models.Wish_List.objects.filter(userID=request.user.id, isbn_13__isbn_13=in_isbn_13)
+                if (wish_list_query.exists()):
+                    wish_list_query.delete()
+
         except IntegrityError:
             return redirect_to_home_something_went_wrong(request)
 
